@@ -183,7 +183,7 @@ public class GitUpdate {
 				e.printStackTrace();
 			} catch (TransportException e) {
 				if (e.getCause() instanceof NoRemoteRepositoryException) {
-					// Ignore
+					System.err.println(e.getCause());
 				} else {
 					e.printStackTrace();
 				}
