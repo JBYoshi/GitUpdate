@@ -177,9 +177,13 @@ public class GitUpdate {
 		try {
 			git.push().setPushAll().setTimeout(5).call();
 		} catch (InvalidRemoteException e) {
-			// Ignore, maybe there is no remote
-		} catch (TransportException e) {
 			e.printStackTrace();
+		} catch (TransportException e) {
+			if (e.getCause() instanceof NoRemoteRepositoryException) {
+				// Ignore
+			} else {
+				e.printStackTrace();
+			}
 		} catch (GitAPIException e) {
 			e.printStackTrace();
 		}
