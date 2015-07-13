@@ -161,7 +161,9 @@ public class GitUpdate {
 			return;
 		}
 		Git git = Git.wrap(repo);
+		boolean hasRemotes = false;
 		for (String remote : repo.getRemoteNames()) {
+			hasRemotes = true;
 			System.out.println("Fetching " + dir.getName() + " remote " + remote);
 			try {
 				git.fetch().setCredentialsProvider(cred).setRemote(remote).call();
@@ -173,19 +175,21 @@ public class GitUpdate {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Pushing " + dir.getName());
-		try {
-			git.push().setPushAll().setTimeout(5).call();
-		} catch (InvalidRemoteException e) {
-			e.printStackTrace();
-		} catch (TransportException e) {
-			if (e.getCause() instanceof NoRemoteRepositoryException) {
-				// Ignore
-			} else {
+		if (hasRemotes) {
+			System.out.println("Pushing " + dir.getName());
+			try {
+				git.push().setPushAll().setTimeout(5).call();
+			} catch (InvalidRemoteException e) {
+				e.printStackTrace();
+			} catch (TransportException e) {
+				if (e.getCause() instanceof NoRemoteRepositoryException) {
+					// Ignore
+				} else {
+					e.printStackTrace();
+				}
+			} catch (GitAPIException e) {
 				e.printStackTrace();
 			}
-		} catch (GitAPIException e) {
-			e.printStackTrace();
 		}
 	}
 }
