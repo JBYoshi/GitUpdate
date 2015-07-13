@@ -173,5 +173,15 @@ public class GitUpdate {
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Pushing " + dir.getName());
+		try {
+			git.push().setPushAll().setTimeout(5).call();
+		} catch (InvalidRemoteException e) {
+			// Ignore, maybe there is no remote
+		} catch (TransportException e) {
+			e.printStackTrace();
+		} catch (GitAPIException e) {
+			e.printStackTrace();
+		}
 	}
 }
