@@ -56,21 +56,53 @@ public class GitUpdate {
 
 		@Override
 		public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
-			for (CredentialItem item : items) {
+			for (int i = 0; i < items.length; i++) {
+				CredentialItem item = items[i];
 				if (item instanceof StringType) {
-					String prompt = item.getPromptText();
-					if (item instanceof Username) {
-						prompt = "Username for " + uri;
+					if (item instanceof Username && i < items.length - 1 && items[i + 1] instanceof Password) {
+						Password password = (Password) items[i + 1];
+						JTextField user = new JTextField();
+						JPasswordField pass = new JPasswordField();
+						JOptionPane pane = new JOptionPane(new Object[] { "Login for " + uri, user, pass },
+								JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+						final JDialog dialog = pane.createDialog("Input");
+						pass.addActionListener((e) -> {
+							pane.setValue(JOptionPane.OK_OPTION);
+							dialog.setVisible(false);
+						});
+						dialog.addWindowListener(new WindowAdapter() {
+							@Override
+							public void windowOpened(WindowEvent e) {
+								user.requestFocusInWindow();
+							}
+						});
+						dialog.setVisible(true);
+						dialog.dispose();
+						if (!Integer.valueOf(JOptionPane.OK_OPTION).equals(pane.getValue())) {
+							return false;
+						}
+						((StringType) item).setValue(user.getText());
+						password.setValue(pass.getPassword());
+						i++;
+					} else {
+						String prompt = item.getPromptText();
+						String value;
+						if (item instanceof Username) {
+							prompt = "Username for " + uri;
+							value = textPrompts.computeIfAbsent(prompt,
+									(prompt0) -> new String(showPasswordDialog(prompt0)));
+						} else {
+							value = textPrompts.computeIfAbsent(prompt,
+									(prompt0) -> new String(showPasswordDialog(prompt0)));
+						}
+						if (value == null) {
+							return false;
+						}
+						((StringType) item).setValue(value);
 					}
-					String value = textPrompts.computeIfAbsent(prompt,
-							(prompt0) -> new String(showPasswordDialog(prompt0)));
-					if (value == null) {
-						return false;
-					}
-					((StringType) item).setValue(value);
 				} else if (item instanceof CharArrayType) {
 					String prompt = item.getPromptText();
-					if (item instanceof Username) {
+					if (item instanceof Password) {
 						prompt = "Password for " + uri;
 					}
 					((CharArrayType) item).setValueNoCopy(
