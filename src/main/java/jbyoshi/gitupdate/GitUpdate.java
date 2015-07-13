@@ -178,7 +178,7 @@ public class GitUpdate {
 		if (hasRemotes) {
 			System.out.println("Pushing " + dir.getName());
 			try {
-				git.push().setPushAll().setTimeout(5).call();
+				git.push().setCredentialsProvider(cred).setPushAll().setTimeout(5).call();
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
 			} catch (TransportException e) {
