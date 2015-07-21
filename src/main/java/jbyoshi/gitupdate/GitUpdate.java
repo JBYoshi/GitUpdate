@@ -159,16 +159,6 @@ public class GitUpdate {
 			}
 			Repository repo = new RepositoryBuilder().setWorkTree(repoDir).setMustExist(true).build();
 			update(repo);
-			if (SubmoduleWalk.containsGitModulesFile(repo)) {
-				SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo);
-				try {
-					while (submodules.next()) {
-						update(submodules.getRepository());
-					}
-				} finally {
-					submodules.release();
-				}
-			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -196,7 +186,15 @@ public class GitUpdate {
 		for (String remote : repo.getRemoteNames()) {
 			System.out.println("Fetching " + dir.getName() + " remote " + remote);
 			try {
-				git.fetch().setCredentialsProvider(cred).setRemote(remote).call();
+				FetchResult result = git.fetch().setCredentialsProvider(cred).setRemote(remote).call();
+				for (TrackingRefUpdate update : result.getTrackingRefUpdates()) {
+					System.out.print("\t" + update.getRemoteName() + ": ");
+					String old = update.getOldObjectId().name();
+					if (update.getOldObjectId().equals(ObjectId.zeroId())) {
+						old = "new branch";
+					}
+					System.out.println(old + " -> " + update.getNewObjectId().name());
+				}
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
 			} catch (TransportException e) {
@@ -231,6 +229,20 @@ public class GitUpdate {
 			} catch (GitAPIException e) {
 				e.printStackTrace();
 			}
+		}
+		try {
+			if (SubmoduleWalk.containsGitModulesFile(repo)) {
+				SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo);
+				try {
+					while (submodules.next()) {
+						update(submodules.getRepository());
+					}
+				} finally {
+					submodules.release();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }
