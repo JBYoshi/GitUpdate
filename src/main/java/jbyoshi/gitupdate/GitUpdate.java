@@ -159,16 +159,6 @@ public class GitUpdate {
 			}
 			Repository repo = new RepositoryBuilder().setWorkTree(repoDir).setMustExist(true).build();
 			update(repo);
-			if (SubmoduleWalk.containsGitModulesFile(repo)) {
-				SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo);
-				try {
-					while (submodules.next()) {
-						update(submodules.getRepository());
-					}
-				} finally {
-					submodules.release();
-				}
-			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -212,6 +202,20 @@ public class GitUpdate {
 			} catch (GitAPIException e) {
 				e.printStackTrace();
 			}
+		}
+		try {
+			if (SubmoduleWalk.containsGitModulesFile(repo)) {
+				SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo);
+				try {
+					while (submodules.next()) {
+						update(submodules.getRepository());
+					}
+				} finally {
+					submodules.release();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }
