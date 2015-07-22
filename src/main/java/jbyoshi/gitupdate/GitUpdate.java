@@ -141,6 +141,7 @@ public class GitUpdate {
 
 	private static final Set<File> updated = new HashSet<File>();
 	private static int fetches = 0;
+	private static int pushes = 0;
 
 	public static void main(String[] args) {
 		File gitDir = new File(System.getProperty("user.home"), "git");
@@ -152,11 +153,9 @@ public class GitUpdate {
 			update(repoDir);
 		}
 		System.out.println("========================================");
-		if (fetches == 0) {
-			System.out.println("Done. Already up to date.");
-		} else {
-			System.out.println("Done. " + fetches + " branch" + (fetches == 1 ? "" : "es") + " fetched.");
-		}
+		System.out.println("Done.");
+		System.out.println(fetches + " branch" + (fetches == 1 ? "" : "es") + " fetched.");
+		System.out.println(pushes + " branch" + (pushes == 1 ? "" : "es") + " pushed.");
 	}
 
 	public static void update(File repoDir) {
@@ -189,6 +188,7 @@ public class GitUpdate {
 		if (!updated.add(dir)) {
 			return;
 		}
+		Map<String, ObjectId> originBranches = new HashMap<>();
 		Git git = Git.wrap(repo);
 		for (String remote : repo.getRemoteNames()) {
 			System.out.println("Fetching " + dir.getName() + " remote " + remote);
@@ -203,10 +203,49 @@ public class GitUpdate {
 					System.out.println(old + " -> " + update.getNewObjectId().name());
 					fetches++;
 				}
+				if (remote.equals("origin")) {
+					for (Ref ref : result.getAdvertisedRefs()) {
+						if (ref.getName().startsWith("refs/heads/")) {
+							originBranches.put(ref.getName().substring("refs/heads/".length()), ref.getObjectId());
+						}
+					}
+				}
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
 			} catch (TransportException e) {
 				e.printStackTrace();
+			} catch (GitAPIException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (!originBranches.isEmpty()) {
+			System.out.println("Pushing " + dir.getName() + " branches " + originBranches.keySet());
+			PushCommand push = git.push().setCredentialsProvider(cred).setTimeout(5);
+			for (String branch : originBranches.keySet()) {
+				push.add("refs/heads/" + branch);
+			}
+			try {
+				for (PushResult result : push.call()) {
+					for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+						if (update.getStatus() == RemoteRefUpdate.Status.OK) {
+							String branchName = update.getSrcRef().substring("refs/heads/".length());
+							ObjectId oldId = originBranches.get(branchName);
+							String old = oldId == null || oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
+							System.out
+									.println("\t" + branchName + ": " + old + " -> " + update.getNewObjectId().name());
+							pushes++;
+						}
+					}
+				}
+			} catch (InvalidRemoteException e) {
+				e.printStackTrace();
+			} catch (TransportException e) {
+				if (e.getCause() instanceof NoRemoteRepositoryException) {
+					System.err.println(e.getCause());
+				} else {
+					e.printStackTrace();
+				}
 			} catch (GitAPIException e) {
 				e.printStackTrace();
 			}
