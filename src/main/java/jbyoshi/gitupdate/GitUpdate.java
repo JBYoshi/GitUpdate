@@ -230,11 +230,11 @@ public class GitUpdate {
 				for (PushResult result : push.call()) {
 					for (RemoteRefUpdate update : result.getRemoteUpdates()) {
 						if (update.getStatus() == RemoteRefUpdate.Status.OK) {
-							String localName = update.getSrcRef().substring("refs/heads/".length());
-							ObjectId oldId = originBranches.get(localName);
+							String branchName = update.getSrcRef().substring("refs/heads/".length());
+							ObjectId oldId = originBranches.get(branchName);
 							String old = oldId == null || oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
-							System.out.println(
-									"\t" + update.getSrcRef() + ": " + old + " -> " + update.getNewObjectId().name());
+							System.out
+									.println("\t" + branchName + ": " + old + " -> " + update.getNewObjectId().name());
 							pushes++;
 						}
 					}
