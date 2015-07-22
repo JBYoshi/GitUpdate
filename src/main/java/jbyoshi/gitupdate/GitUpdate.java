@@ -211,24 +211,31 @@ public class GitUpdate {
 			}
 		}
 
-		Set<String> branches = Collections.EMPTY_SET;
+		Map<String, Ref> branches = Collections.EMPTY_MAP;
 		try {
-			branches = repo.getRefDatabase().getRefs("refs/remotes/origin/").keySet();
+			branches = repo.getRefDatabase().getRefs("refs/remotes/origin/");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		if (!branches.isEmpty()) {
 			System.out.println("Pushing " + dir.getName() + " branches " + branches);
 			PushCommand push = git.push().setCredentialsProvider(cred).setTimeout(5);
-			for (String branch : branches) {
+			for (String branch : branches.keySet()) {
 				push.add("refs/heads/" + branch);
 			}
 			try {
 				for (PushResult result : push.call()) {
 					for (RemoteRefUpdate update : result.getRemoteUpdates()) {
-						System.out.println("\t" + update.getSrcRef() + ": " + update.getNewObjectId().name());
+						if (update.getStatus() == RemoteRefUpdate.Status.OK) {
+							String localName = "refs/remotes/origin/"
+									+ update.getSrcRef().substring("refs/heads/".length());
+							ObjectId oldId = branches.get(localName).getPeeledObjectId();
+							String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
+							System.out.println(
+									"\t" + update.getSrcRef() + ": " + old + " -> " + update.getNewObjectId().name());
+							pushes++;
+						}
 					}
-					pushes += result.getRemoteUpdates().size();
 				}
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
