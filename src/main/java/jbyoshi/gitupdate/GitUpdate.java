@@ -218,7 +218,7 @@ public class GitUpdate {
 			e.printStackTrace();
 		}
 		if (!branches.isEmpty()) {
-			System.out.println("Pushing " + dir.getName() + " branches " + branches);
+			System.out.println("Pushing " + dir.getName() + " branches " + branches.keySet());
 			PushCommand push = git.push().setCredentialsProvider(cred).setTimeout(5);
 			for (String branch : branches.keySet()) {
 				push.add("refs/heads/" + branch);
