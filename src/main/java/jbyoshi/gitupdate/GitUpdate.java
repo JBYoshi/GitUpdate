@@ -206,8 +206,7 @@ public class GitUpdate {
 				if (remote.equals("origin")) {
 					for (Ref ref : result.getAdvertisedRefs()) {
 						if (ref.getName().startsWith("refs/heads/")) {
-							originBranches.put(ref.getName().substring("refs/heads/".length()),
-									ref.getPeeledObjectId());
+							originBranches.put(ref.getName().substring("refs/heads/".length()), ref.getObjectId());
 						}
 					}
 				}
