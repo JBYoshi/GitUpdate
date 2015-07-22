@@ -140,6 +140,7 @@ public class GitUpdate {
 	};
 
 	private static final Set<File> updated = new HashSet<File>();
+	private static int fetches = 0;
 
 	public static void main(String[] args) {
 		File gitDir = new File(System.getProperty("user.home"), "git");
@@ -149,6 +150,12 @@ public class GitUpdate {
 		}
 		for (File repoDir : gitDir.listFiles()) {
 			update(repoDir);
+		}
+		System.out.println("========================================");
+		if (fetches == 0) {
+			System.out.println("Done. Already up to date.");
+		} else {
+			System.out.println("Done. " + fetches + " branch" + (fetches == 1 ? "" : "es") + " fetched.");
 		}
 	}
 
@@ -194,6 +201,7 @@ public class GitUpdate {
 						old = "new branch";
 					}
 					System.out.println(old + " -> " + update.getNewObjectId().name());
+					fetches++;
 				}
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
