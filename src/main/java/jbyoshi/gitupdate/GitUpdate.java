@@ -141,6 +141,7 @@ public class GitUpdate {
 
 	private static final Set<File> updated = new HashSet<File>();
 	private static int fetches = 0;
+	private static int pushes = 0;
 
 	public static void main(String[] args) {
 		File gitDir = new File(System.getProperty("user.home"), "git");
@@ -152,11 +153,9 @@ public class GitUpdate {
 			update(repoDir);
 		}
 		System.out.println("========================================");
-		if (fetches == 0) {
-			System.out.println("Done. Already up to date.");
-		} else {
-			System.out.println("Done. " + fetches + " branch" + (fetches == 1 ? "" : "es") + " fetched.");
-		}
+		System.out.println("Done.");
+		System.out.println(fetches + " branch" + (fetches == 1 ? "" : "es") + " fetched.");
+		System.out.println(pushes + " branch" + (pushes == 1 ? "" : "es") + " pushed.");
 	}
 
 	public static void update(File repoDir) {
@@ -225,7 +224,16 @@ public class GitUpdate {
 				push.add("refs/heads/" + branch);
 			}
 			try {
-				push.call();
+				for (PushResult result : push.call()) {
+					for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+						String old = update.getExpectedOldObjectId().name();
+						if (update.getExpectedOldObjectId().equals(ObjectId.zeroId())) {
+							old = "new branch";
+						}
+						System.out.println("\t" + old + " -> " + update.getNewObjectId().name());
+					}
+					pushes += result.getRemoteUpdates().size();
+				}
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
 			} catch (TransportException e) {
