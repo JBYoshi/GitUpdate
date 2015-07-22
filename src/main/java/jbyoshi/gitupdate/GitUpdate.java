@@ -226,11 +226,7 @@ public class GitUpdate {
 			try {
 				for (PushResult result : push.call()) {
 					for (RemoteRefUpdate update : result.getRemoteUpdates()) {
-						String old = update.getExpectedOldObjectId().name();
-						if (update.getExpectedOldObjectId().equals(ObjectId.zeroId())) {
-							old = "new branch";
-						}
-						System.out.println("\t" + old + " -> " + update.getNewObjectId().name());
+						System.out.println("\t" + update.getSrcRef() + ": " + update.getNewObjectId().name());
 					}
 					pushes += result.getRemoteUpdates().size();
 				}
