@@ -188,6 +188,7 @@ public class GitUpdate {
 		if (!updated.add(dir)) {
 			return;
 		}
+		Map<String, ObjectId> originBranches = new HashMap<>();
 		Git git = Git.wrap(repo);
 		for (String remote : repo.getRemoteNames()) {
 			System.out.println("Fetching " + dir.getName() + " remote " + remote);
@@ -202,6 +203,14 @@ public class GitUpdate {
 					System.out.println(old + " -> " + update.getNewObjectId().name());
 					fetches++;
 				}
+				if (remote.equals("origin")) {
+					for (Ref ref : result.getAdvertisedRefs()) {
+						if (ref.getName().startsWith("refs/heads/")) {
+							originBranches.put(ref.getName().substring("refs/heads/".length()),
+									ref.getPeeledObjectId());
+						}
+					}
+				}
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
 			} catch (TransportException e) {
@@ -211,26 +220,19 @@ public class GitUpdate {
 			}
 		}
 
-		Map<String, Ref> branches = Collections.EMPTY_MAP;
-		try {
-			branches = repo.getRefDatabase().getRefs("refs/remotes/origin/");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		if (!branches.isEmpty()) {
-			System.out.println("Pushing " + dir.getName() + " branches " + branches.keySet());
+		if (!originBranches.isEmpty()) {
+			System.out.println("Pushing " + dir.getName() + " branches " + originBranches.keySet());
 			PushCommand push = git.push().setCredentialsProvider(cred).setTimeout(5);
-			for (String branch : branches.keySet()) {
+			for (String branch : originBranches.keySet()) {
 				push.add("refs/heads/" + branch);
 			}
 			try {
 				for (PushResult result : push.call()) {
 					for (RemoteRefUpdate update : result.getRemoteUpdates()) {
 						if (update.getStatus() == RemoteRefUpdate.Status.OK) {
-							String localName = "refs/remotes/origin/"
-									+ update.getSrcRef().substring("refs/heads/".length());
-							ObjectId oldId = branches.get(localName).getPeeledObjectId();
-							String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
+							String localName = update.getSrcRef().substring("refs/heads/".length());
+							ObjectId oldId = originBranches.get(localName);
+							String old = oldId == null || oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
 							System.out.println(
 									"\t" + update.getSrcRef() + ": " + old + " -> " + update.getNewObjectId().name());
 							pushes++;
