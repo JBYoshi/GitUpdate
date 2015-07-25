@@ -36,6 +36,8 @@ import org.eclipse.jgit.submodule.*;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.CredentialItem.*;
 
+import com.google.common.collect.*;
+
 public class GitUpdate {
 	private static final CredentialsProvider cred = new CredentialsProvider() {
 		private final Map<String, String> textPrompts = new HashMap<String, String>();
@@ -195,7 +197,6 @@ public class GitUpdate {
 		if (!updated.add(dir)) {
 			return;
 		}
-		Map<String, ObjectId> originBranches = new HashMap<>();
 		Git git = Git.wrap(repo);
 		for (String remote : repo.getRemoteNames()) {
 			System.out.println("Fetching " + dir.getName() + " remote " + remote);
@@ -209,13 +210,6 @@ public class GitUpdate {
 					}
 					System.out.println(old + " -> " + update.getNewObjectId().name());
 					fetches++;
-				}
-				if (remote.equals("origin")) {
-					for (Ref ref : result.getAdvertisedRefs()) {
-						if (ref.getName().startsWith("refs/heads/")) {
-							originBranches.put(ref.getName().substring("refs/heads/".length()), ref.getObjectId());
-						}
-					}
 				}
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
@@ -242,10 +236,20 @@ public class GitUpdate {
 			e.printStackTrace();
 		}
 
-		if (!originBranches.isEmpty()) {
-			System.out.println("Pushing " + dir.getName() + " branches " + originBranches.keySet());
+		Map<String, ObjectId> pushBranches;
+		try {
+			Map<String, Ref> pushRefs = repo.getRefDatabase().getRefs("refs/heads/");
+			pushRefs = Maps.filterKeys(pushRefs, (k) -> new BranchConfig(repo.getConfig(), k).getRemote() != null);
+			pushBranches = Maps.transformValues(pushRefs, Ref::getObjectId);
+			pushBranches = Maps.filterValues(pushBranches, (v) -> v != null);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		if (!pushBranches.isEmpty()) {
 			PushCommand push = git.push().setCredentialsProvider(cred).setTimeout(5);
-			for (String branch : originBranches.keySet()) {
+			for (String branch : pushBranches.keySet()) {
 				push.add("refs/heads/" + branch);
 			}
 			try {
@@ -253,7 +257,7 @@ public class GitUpdate {
 					for (RemoteRefUpdate update : result.getRemoteUpdates()) {
 						if (update.getStatus() == RemoteRefUpdate.Status.OK) {
 							String branchName = update.getSrcRef().substring("refs/heads/".length());
-							ObjectId oldId = originBranches.get(branchName);
+							ObjectId oldId = pushBranches.get(branchName);
 							String old = oldId == null || oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
 							System.out
 									.println("\t" + branchName + ": " + old + " -> " + update.getNewObjectId().name());
