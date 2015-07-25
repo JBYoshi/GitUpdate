@@ -313,17 +313,18 @@ public class GitUpdate {
 					case FAST_FORWARD:
 						System.out.println("Fast-forwarded " + ref.getName() + " to " + target.getName());
 						fastForwards++;
-						return;
+						break;
 					case REJECTED:
 					case LOCK_FAILURE:
 						System.err.println(new ConcurrentRefUpdateException(JGitText.get().couldNotLockHEAD,
 								refUpdate.getRef(), rc));
-						return;
+						break;
 					case NO_CHANGE:
-						return;
+						break;
 					default:
 						System.err.println(new JGitInternalException(MessageFormat
 								.format(JGitText.get().updatingRefFailed, ref.getName(), targetId.toString(), rc)));
+						break;
 					}
 				}
 				return;
