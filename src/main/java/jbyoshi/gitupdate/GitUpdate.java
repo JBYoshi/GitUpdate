@@ -228,6 +228,7 @@ public class GitUpdate {
 				for (Map.Entry<String, Ref> localBranch : repo.getRefDatabase().getRefs("refs/heads/").entrySet()) {
 					check |= tryFastForward(repo, localBranch.getValue(),
 							repo.getRef(new BranchConfig(repo.getConfig(), localBranch.getKey()).getTrackingBranch()));
+					// TODO Don't hardcode this
 					check |= tryFastForward(repo, localBranch.getValue(),
 							repo.getRef("refs/remotes/upstream/" + localBranch.getKey()));
 				}
