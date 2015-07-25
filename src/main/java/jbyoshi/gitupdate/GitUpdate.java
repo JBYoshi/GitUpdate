@@ -233,6 +233,9 @@ public class GitUpdate {
 						repo.getRef("refs/remotes/origin/" + localBranch.getKey()));
 				tryFastForward(repo, localBranch.getValue(),
 						repo.getRef("refs/remotes/upstream/" + localBranch.getKey()));
+				tryFastForward(repo, localBranch.getValue(), repo.getRef(
+						new BranchConfig(repo.getConfig(), localBranch.getKey().substring("refs/heads/".length()))
+								.getTrackingBranch()));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
