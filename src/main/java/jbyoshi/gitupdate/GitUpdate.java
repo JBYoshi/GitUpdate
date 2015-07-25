@@ -228,12 +228,16 @@ public class GitUpdate {
 
 		System.out.println("Fast-forwarding local branches to their tracking branches");
 		try {
-			for (Map.Entry<String, Ref> localBranch : repo.getRefDatabase().getRefs("refs/heads/").entrySet()) {
-				tryFastForward(repo, localBranch.getValue(),
-						repo.getRef("refs/remotes/origin/" + localBranch.getKey()));
-				tryFastForward(repo, localBranch.getValue(),
-						repo.getRef("refs/remotes/upstream/" + localBranch.getKey()));
-			}
+			boolean check;
+			do {
+				check = false;
+				for (Map.Entry<String, Ref> localBranch : repo.getRefDatabase().getRefs("refs/heads/").entrySet()) {
+					check |= tryFastForward(repo, localBranch.getValue(),
+							repo.getRef(new BranchConfig(repo.getConfig(), localBranch.getKey()).getTrackingBranch()));
+					check |= tryFastForward(repo, localBranch.getValue(),
+							repo.getRef("refs/remotes/upstream/" + localBranch.getKey()));
+				}
+			} while (check);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -285,9 +289,9 @@ public class GitUpdate {
 		}
 	}
 
-	private static void tryFastForward(Repository repo, Ref ref, Ref target) {
+	private static boolean tryFastForward(Repository repo, Ref ref, Ref target) {
 		if (ref == null || target == null) {
-			return;
+			return false;
 		}
 		target = repo.peel(target);
 		try {
@@ -313,7 +317,7 @@ public class GitUpdate {
 					case FAST_FORWARD:
 						System.out.println("Fast-forwarded " + ref.getName() + " to " + target.getName());
 						fastForwards++;
-						break;
+						return true;
 					case REJECTED:
 					case LOCK_FAILURE:
 						System.err.println(new ConcurrentRefUpdateException(JGitText.get().couldNotLockHEAD,
@@ -327,11 +331,11 @@ public class GitUpdate {
 						break;
 					}
 				}
-				return;
+				return false;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			return;
+			return false;
 		}
 		try {
 			MergeResult result = Git.wrap(repo).merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY)
@@ -341,6 +345,7 @@ public class GitUpdate {
 			} else if (result.getMergeStatus() == MergeResult.MergeStatus.FAST_FORWARD) {
 				System.out.println("Fast-forwarded " + ref.getName() + " to " + target.getName());
 				fastForwards++;
+				return true;
 			} else {
 				System.err.println("Fast-forward failed: status " + result.getMergeStatus());
 			}
@@ -357,5 +362,6 @@ public class GitUpdate {
 		} catch (GitAPIException e) {
 			e.printStackTrace();
 		}
+		return false;
 	}
 }
