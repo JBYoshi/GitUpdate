@@ -16,6 +16,22 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>jbyoshi.gitupdate.GitUpdate</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-shade-plugin</artifactId>
+				<goals>
+					<goal>shade</goal>
+				</goals>
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
