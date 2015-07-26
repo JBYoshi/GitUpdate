@@ -220,7 +220,7 @@ public class GitUpdate {
 			}
 		}
 
-		System.out.println("Fast-forwarding local branches to their tracking branches");
+		System.out.println("Fast-forwarding " + dir.getName() + " to tracking branches");
 		try {
 			boolean check;
 			do {
