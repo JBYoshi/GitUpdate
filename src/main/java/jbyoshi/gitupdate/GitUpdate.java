@@ -93,15 +93,16 @@ public class GitUpdate {
 						i++;
 					} else {
 						String prompt = item.getPromptText();
-						String value;
 						if (item instanceof Username) {
 							prompt = "Username for " + uri;
-							value = textPrompts.computeIfAbsent(prompt,
-									(prompt0) -> new String(showPasswordDialog(prompt0)));
-						} else {
-							value = textPrompts.computeIfAbsent(prompt,
-									(prompt0) -> new String(showPasswordDialog(prompt0)));
 						}
+						String value = textPrompts.computeIfAbsent(prompt, (prompt0) -> {
+							char[] val = showPasswordDialog(prompt0);
+							if (val == null) {
+								return null;
+							}
+							return new String(val);
+						});
 						if (value == null) {
 							return false;
 						}
@@ -214,6 +215,9 @@ public class GitUpdate {
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
 			} catch (TransportException e) {
+				if (e.getMessage().contains("Auth cancel")) {
+					System.exit(0);
+				}
 				e.printStackTrace();
 			} catch (GitAPIException e) {
 				e.printStackTrace();
@@ -271,6 +275,8 @@ public class GitUpdate {
 			} catch (TransportException e) {
 				if (e.getCause() instanceof NoRemoteRepositoryException) {
 					System.err.println(e.getCause());
+				} else if (e.getMessage().contains("Auth cancel")) {
+					System.exit(0);
 				} else {
 					e.printStackTrace();
 				}
