@@ -17,20 +17,31 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>jbyoshi.gitupdate.GitUpdate</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
-				<goals>
-					<goal>shade</goal>
-				</goals>
+				<version>2.4.1</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<transformers>
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<mainClass>jbyoshi.gitupdate.GitUpdate</mainClass>
+						</transformer>
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+							<resources>
+								<resource>.SF</resource>
+								<resource>.RSA</resource>
+							</resources>
+						</transformer>
+					</transformers>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
