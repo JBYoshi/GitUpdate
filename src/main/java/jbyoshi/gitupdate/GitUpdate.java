@@ -18,15 +18,20 @@ package jbyoshi.gitupdate;
 import java.awt.event.*;
 import java.io.*;
 import java.nio.file.*;
+import java.text.*;
 import java.util.*;
 
 import javax.swing.*;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.errors.*;
+import org.eclipse.jgit.internal.*;
 import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.lib.RefUpdate.*;
+import org.eclipse.jgit.revwalk.*;
 import org.eclipse.jgit.submodule.*;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.CredentialItem.*;
@@ -144,6 +149,7 @@ public class GitUpdate {
 
 	private static final Set<File> updated = new HashSet<File>();
 	private static int fetches = 0;
+	private static int fastForwards = 0;
 	private static int pushes = 0;
 
 	public static void main(String[] args) {
@@ -158,6 +164,7 @@ public class GitUpdate {
 		System.out.println("========================================");
 		System.out.println("Done.");
 		System.out.println(fetches + " branch" + (fetches == 1 ? "" : "es") + " fetched.");
+		System.out.println(fastForwards + " branch" + (fastForwards == 1 ? "" : "es") + " fast forwarded.");
 		System.out.println(pushes + " branch" + (pushes == 1 ? "" : "es") + " pushed.");
 	}
 
@@ -217,6 +224,23 @@ public class GitUpdate {
 			}
 		}
 
+		System.out.println("Fast-forwarding " + dir.getName() + " to tracking branches");
+		try {
+			boolean check;
+			do {
+				check = false;
+				for (Map.Entry<String, Ref> localBranch : repo.getRefDatabase().getRefs("refs/heads/").entrySet()) {
+					check |= tryFastForward(repo, localBranch.getValue(),
+							repo.getRef(new BranchConfig(repo.getConfig(), localBranch.getKey()).getTrackingBranch()));
+					// TODO Don't hardcode this
+					check |= tryFastForward(repo, localBranch.getValue(),
+							repo.getRef("refs/remotes/upstream/" + localBranch.getKey()));
+				}
+			} while (check);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		Map<String, ObjectId> pushBranches;
 		try {
 			Map<String, Ref> pushRefs = repo.getRefDatabase().getRefs("refs/heads/");
@@ -229,7 +253,6 @@ public class GitUpdate {
 		}
 
 		if (!pushBranches.isEmpty()) {
-			System.out.println("Pushing " + dir.getName() + " branches " + pushBranches.keySet());
 			PushCommand push = git.push().setCredentialsProvider(cred).setTimeout(5);
 			for (String branch : pushBranches.keySet()) {
 				push.add("refs/heads/" + branch);
@@ -275,5 +298,81 @@ public class GitUpdate {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static boolean tryFastForward(Repository repo, Ref ref, Ref target) {
+		if (ref == null || target == null) {
+			return false;
+		}
+		target = repo.peel(target);
+		try {
+			if (!ref.equals(repo.getRef(Constants.HEAD).getTarget())) {
+				RevWalk revWalk = new RevWalk(repo);
+
+				ObjectId targetId = target.getPeeledObjectId();
+				if (targetId == null) {
+					targetId = target.getObjectId();
+				}
+
+				RevCommit targetCommit = revWalk.lookupCommit(targetId);
+				ObjectId sourceId = ref.getObjectId();
+				RevCommit sourceCommit = revWalk.lookupCommit(sourceId);
+				if (revWalk.isMergedInto(sourceCommit, targetCommit)) {
+					RefUpdate refUpdate = repo.updateRef(ref.getName());
+					refUpdate.setNewObjectId(targetCommit);
+					refUpdate.setRefLogMessage("Fast forward", false);
+					refUpdate.setExpectedOldObjectId(sourceId);
+					Result rc = refUpdate.update();
+					switch (rc) {
+					case NEW:
+					case FAST_FORWARD:
+						System.out.println("Fast-forwarded " + ref.getName() + " to " + target.getName());
+						fastForwards++;
+						return true;
+					case REJECTED:
+					case LOCK_FAILURE:
+						System.err.println(new ConcurrentRefUpdateException(JGitText.get().couldNotLockHEAD,
+								refUpdate.getRef(), rc));
+						break;
+					case NO_CHANGE:
+						break;
+					default:
+						System.err.println(new JGitInternalException(MessageFormat
+								.format(JGitText.get().updatingRefFailed, ref.getName(), targetId.toString(), rc)));
+						break;
+					}
+				}
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		try {
+			MergeResult result = Git.wrap(repo).merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY)
+					.include(target.getTarget()).call();
+			if (result.getMergeStatus() == MergeResult.MergeStatus.ALREADY_UP_TO_DATE) {
+				// Ignore
+			} else if (result.getMergeStatus() == MergeResult.MergeStatus.FAST_FORWARD) {
+				System.out.println("Fast-forwarded " + ref.getName() + " to " + target.getName());
+				fastForwards++;
+				return true;
+			} else {
+				System.err.println("Fast-forward failed: status " + result.getMergeStatus());
+			}
+		} catch (NoHeadException e) {
+			// Ignore
+		} catch (ConcurrentRefUpdateException e) {
+			System.err.println(e);
+		} catch (CheckoutConflictException e) {
+			System.err.println(e);
+		} catch (InvalidMergeHeadsException e) {
+			e.printStackTrace();
+		} catch (WrongRepositoryStateException e) {
+			System.err.println(e);
+		} catch (GitAPIException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 }
