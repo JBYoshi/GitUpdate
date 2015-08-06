@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>jbyoshi</groupId>
 	<artifactId>git-update</artifactId>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.1</version>
 	<name>Git Update</name>
 	<description>Automatically pulls updates for your repositories.</description>
 	<build>
