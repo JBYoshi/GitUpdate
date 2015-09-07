@@ -115,7 +115,7 @@ public class GitUpdate {
 					}
 					((CharArrayType) item).setValueNoCopy(
 							textPrompts.computeIfAbsent(prompt, (prompt0) -> new String(showPasswordDialog(prompt0)))
-									.toCharArray());
+							.toCharArray());
 				} else {
 					return false;
 				}
@@ -153,6 +153,11 @@ public class GitUpdate {
 	private static int pushes = 0;
 
 	public static void main(String[] args) {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		File gitDir = new File(System.getProperty("user.home"), "git");
 		if (!gitDir.exists()) {
 			System.err.println("No such directory: " + gitDir);
@@ -265,7 +270,7 @@ public class GitUpdate {
 							ObjectId oldId = pushBranches.get(branchName);
 							String old = oldId == null || oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
 							System.out
-									.println("\t" + branchName + ": " + old + " -> " + update.getNewObjectId().name());
+							.println("\t" + branchName + ": " + old + " -> " + update.getNewObjectId().name());
 							pushes++;
 						}
 					}
