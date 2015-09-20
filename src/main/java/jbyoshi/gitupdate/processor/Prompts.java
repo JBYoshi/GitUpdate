@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
 import java.awt.event.*;
 import java.util.*;

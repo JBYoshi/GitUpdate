@@ -27,6 +27,8 @@ import org.eclipse.jgit.submodule.*;
 
 import com.google.common.collect.*;
 
+import jbyoshi.gitupdate.processor.*;
+
 public class GitUpdate {
 	private static final Set<File> updated = new HashSet<File>();
 	private static final ImmutableList<Processor<?>> processors = ImmutableList.of(new Fetch(), new FastForward(),

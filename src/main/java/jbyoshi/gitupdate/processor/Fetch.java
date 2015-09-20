@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.transport.*;
+
+import jbyoshi.gitupdate.*;
 
 public final class Fetch extends RemoteProcessor {
 

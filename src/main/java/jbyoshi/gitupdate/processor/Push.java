@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
 import java.util.*;
 
@@ -22,6 +22,8 @@ import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.transport.*;
 
 import com.google.common.collect.*;
+
+import jbyoshi.gitupdate.*;
 
 public class Push extends SingleProcessor {
 

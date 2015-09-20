@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
 import java.io.*;
 import java.util.*;
@@ -21,6 +21,8 @@ import java.util.*;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
+
+import jbyoshi.gitupdate.*;
 
 public abstract class BranchProcessor extends Processor<Map.Entry<String, Ref>> {
 

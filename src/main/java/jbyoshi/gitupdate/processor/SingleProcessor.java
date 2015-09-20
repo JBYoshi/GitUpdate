@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
-import java.io.*;
+import java.util.*;
 
 import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 
-public abstract class RemoteProcessor extends Processor<String> {
+public abstract class SingleProcessor extends Processor<Void> {
 
 	@Override
-	public final Iterable<String> getKeys(Repository repo) {
-		return repo.getRemoteNames();
+	public final Iterable<Void> getKeys(Repository repo) throws Exception {
+		return Collections.singleton(null);
 	}
 
 	@Override
-	public final void process(Repository repo, Git git, String remote) throws GitAPIException, IOException {
-		process(repo, git, remote, Constants.R_REMOTES + remote + "/");
+	public final void process(Repository repo, Git git, Void key) throws Exception {
+		process(repo, git);
 	}
 
-	public abstract void process(Repository repo, Git git, String remote, String fullRemote)
-			throws GitAPIException, IOException;
+	public abstract void process(Repository repo, Git git) throws Exception;
 
 }

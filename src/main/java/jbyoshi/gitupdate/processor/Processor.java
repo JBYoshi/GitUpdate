@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -22,7 +22,7 @@ import org.eclipse.jgit.lib.*;
 
 public abstract class Processor<T> {
 
-	void run(Repository repo, Git git) {
+	public void run(Repository repo, Git git) {
 		Iterable<T> keys;
 		try {
 			keys = getKeys(repo);
@@ -51,7 +51,7 @@ public abstract class Processor<T> {
 
 	protected abstract void process(Repository repo, Git git, T key) throws Exception;
 
-	protected void report() {
+	public void report() {
 	}
 
 }
