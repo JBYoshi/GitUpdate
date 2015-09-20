@@ -1,0 +1,45 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.10.0'
+	}
+}
+apply plugin: 'license'
+defaultTasks 'licenseFormat', 'build'
+license {
+    header file('gradle/HEADER.txt')
+    include '**/*.java'
+
+    ignoreFailures false
+    strictCheck true
+
+    mapping {
+        java = 'SLASHSTAR_STYLE'
+    }
+}
+processResources {
+    // Include in final JAR
+    from 'LICENSE.txt'
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+dependencies {
+    compile "org.eclipse.jgit:org.eclipse.jgit:3.6.1.201501031845-r"
+    compile "com.google.guava:guava:18.0"
+}
+
+apply plugin: 'application'
+mainClassName = 'jbyoshi.gitupdate.GitUpdate'
+jar{manifest{attributes('Main-Class': mainClassName)}}

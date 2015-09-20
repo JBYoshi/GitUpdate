@@ -1,6 +1,16 @@
-/target/
-dependency-reduced-pom.xml
+# Gradle
+/build/
+/.gradle/
 
-/.settings/
-/.classpath
+# Eclipse
 /.project
+/.classpath
+/.settings/
+/bin/
+
+# NetBeans
+/nbproject/
+
+# System
+.DS_Store
+Thumbs.db
