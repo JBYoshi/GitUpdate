@@ -15,7 +15,7 @@ public final class Fetch extends RemoteProcessor {
 		FetchResult result = git.fetch().setRemoveDeletedRefs(true).setCredentialsProvider(Prompts.INSTANCE)
 				.setRemote(remote).call();
 		for (TrackingRefUpdate update : result.getTrackingRefUpdates()) {
-			if (update.getRemoteName().equals(Constants.HEAD)) {
+			if (update.getRemoteName().equals(Constants.R_HEADS + Constants.HEAD)) {
 				continue;
 			}
 			System.out.print("\t\t" + update.getRemoteName() + ": ");
