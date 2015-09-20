@@ -84,12 +84,6 @@ public class GitUpdate {
 			return;
 		}
 
-		System.out.println("Updating " + dir.getName());
-		Git git = Git.wrap(repo);
-		for (Processor<?> processor : processors) {
-			processor.run(repo, git);
-		}
-
 		try {
 			if (SubmoduleWalk.containsGitModulesFile(repo)) {
 				SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo);
@@ -103,6 +97,12 @@ public class GitUpdate {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+
+		System.out.println("Updating " + dir.getName());
+		Git git = Git.wrap(repo);
+		for (Processor<?> processor : processors) {
+			processor.run(repo, git);
 		}
 	}
 }
