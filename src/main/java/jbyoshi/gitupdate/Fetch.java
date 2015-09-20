@@ -18,7 +18,7 @@ public final class Fetch extends RemoteProcessor {
 			if (update.getRemoteName().equals(Constants.R_HEADS + Constants.HEAD)) {
 				continue;
 			}
-			System.out.print("\t\t" + update.getRemoteName() + ": ");
+			System.out.print("\t\t" + Utils.getShortBranch(update.getRemoteName()) + ": ");
 			String oldId = update.getOldObjectId().name();
 			if (update.getOldObjectId().equals(ObjectId.zeroId())) {
 				oldId = "new branch";

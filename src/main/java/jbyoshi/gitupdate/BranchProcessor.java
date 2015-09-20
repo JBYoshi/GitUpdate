@@ -11,7 +11,7 @@ public abstract class BranchProcessor extends Processor<Map.Entry<String, Ref>> 
 
 	@Override
 	public final Iterable<Map.Entry<String, Ref>> getKeys(Repository repo) throws IOException {
-		return repo.getRefDatabase().getRefs(Constants.R_HEADS).entrySet();
+		return Utils.getLocalBranches(repo).entrySet();
 	}
 
 	@Override
