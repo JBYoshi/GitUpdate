@@ -90,7 +90,7 @@ public class FastForward extends BranchProcessor {
 
 	@Override
 	public void report() {
-		System.out.println(fastForwards + " branch" + (fastForwards == 1 ? "es" : "") + " fast forwarded.");
+		System.out.println(fastForwards + " branch" + (fastForwards == 1 ? "" : "es") + " fast forwarded.");
 	}
 
 }

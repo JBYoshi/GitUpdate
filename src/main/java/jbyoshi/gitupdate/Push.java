@@ -41,7 +41,7 @@ public class Push extends SingleProcessor {
 
 	@Override
 	public void report() {
-		System.out.println(pushes + " branch" + (pushes == 1 ? "es" : "") + " pushed.");
+		System.out.println(pushes + " branch" + (pushes == 1 ? "" : "es") + " pushed.");
 	}
 
 }
