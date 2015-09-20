@@ -18,7 +18,7 @@ public class FastForward extends BranchProcessor {
 	public void process(Repository repo, Git git, String branch, Ref ref) throws GitAPIException, IOException {
 		tryFastForward(repo, ref, repo.getRef(new BranchConfig(repo.getConfig(), branch).getTrackingBranch()));
 		// TODO Don't hardcode this
-		tryFastForward(repo, ref, repo.getRef("refs/remotes/upstream/" + branch));
+		tryFastForward(repo, ref, repo.getRef(Constants.R_REMOTES + "upstream/" + branch));
 	}
 
 	private boolean tryFastForward(Repository repo, Ref ref, Ref target) throws GitAPIException, IOException {

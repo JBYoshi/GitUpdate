@@ -14,7 +14,7 @@ public class Push extends SingleProcessor {
 
 	@Override
 	public void process(Repository repo, Git git) throws Exception {
-		Map<String, Ref> pushRefs = repo.getRefDatabase().getRefs("refs/heads/");
+		Map<String, Ref> pushRefs = repo.getRefDatabase().getRefs(Constants.R_HEADS);
 		pushRefs = Maps.filterKeys(pushRefs, (k) -> new BranchConfig(repo.getConfig(), k).getRemote() != null);
 		Map<String, ObjectId> pushBranches = Maps.transformValues(pushRefs, Ref::getObjectId);
 		pushBranches = Maps.filterValues(pushBranches, (v) -> v != null);
@@ -23,12 +23,12 @@ public class Push extends SingleProcessor {
 			System.out.println("\tPushing");
 			PushCommand push = git.push().setCredentialsProvider(Prompts.INSTANCE).setTimeout(5);
 			for (String branch : pushBranches.keySet()) {
-				push.add("refs/heads/" + branch);
+				push.add(Constants.R_HEADS + branch);
 			}
 			for (PushResult result : push.call()) {
 				for (RemoteRefUpdate update : result.getRemoteUpdates()) {
 					if (update.getStatus() == RemoteRefUpdate.Status.OK) {
-						String branchName = update.getSrcRef().substring("refs/heads/".length());
+						String branchName = update.getSrcRef().substring(Constants.R_HEADS.length());
 						ObjectId oldId = pushBranches.get(branchName);
 						String old = oldId == null || oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
 						System.out.println("\t\t" + branchName + ": " + old + " -> " + update.getNewObjectId().name());

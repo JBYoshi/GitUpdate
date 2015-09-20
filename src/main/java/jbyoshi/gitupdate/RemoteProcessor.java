@@ -15,7 +15,7 @@ public abstract class RemoteProcessor extends Processor<String> {
 
 	@Override
 	public final void process(Repository repo, Git git, String remote) throws GitAPIException, IOException {
-		process(repo, git, remote, "refs/remotes/" + remote + "/");
+		process(repo, git, remote, Constants.R_REMOTES + remote + "/");
 	}
 
 	public abstract void process(Repository repo, Git git, String remote, String fullRemote)
