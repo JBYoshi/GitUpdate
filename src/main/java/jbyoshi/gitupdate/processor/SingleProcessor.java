@@ -20,6 +20,8 @@ import java.util.*;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.lib.*;
 
+import jbyoshi.gitupdate.ui.*;
+
 public abstract class SingleProcessor extends Processor<Void> {
 
 	@Override
@@ -28,10 +30,10 @@ public abstract class SingleProcessor extends Processor<Void> {
 	}
 
 	@Override
-	public final void process(Repository repo, Git git, Void key) throws Exception {
-		process(repo, git);
+	public final void process(Repository repo, Git git, Void key, ReportData data) throws Exception {
+		process(repo, git, data);
 	}
 
-	public abstract void process(Repository repo, Git git) throws Exception;
+	public abstract void process(Repository repo, Git git, ReportData data) throws Exception;
 
 }

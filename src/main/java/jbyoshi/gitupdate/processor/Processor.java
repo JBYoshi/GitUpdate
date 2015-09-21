@@ -20,9 +20,11 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.errors.*;
 import org.eclipse.jgit.lib.*;
 
+import jbyoshi.gitupdate.ui.*;
+
 public abstract class Processor<T> {
 
-	public void run(Repository repo, Git git) {
+	public void run(Repository repo, Git git, ReportData report) {
 		Iterable<T> keys;
 		try {
 			keys = getKeys(repo);
@@ -32,7 +34,7 @@ public abstract class Processor<T> {
 		}
 		for (T key : keys) {
 			try {
-				process(repo, git, key);
+				process(repo, git, key, report);
 			} catch (TransportException e) {
 				if (e.getCause() instanceof NoRemoteRepositoryException) {
 					System.err.println(e.getCause());
@@ -49,9 +51,6 @@ public abstract class Processor<T> {
 
 	protected abstract Iterable<T> getKeys(Repository repo) throws Exception;
 
-	protected abstract void process(Repository repo, Git git, T key) throws Exception;
-
-	public void report() {
-	}
+	protected abstract void process(Repository repo, Git git, T key, ReportData report) throws Exception;
 
 }

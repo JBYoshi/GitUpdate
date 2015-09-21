@@ -21,6 +21,8 @@ import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 
+import jbyoshi.gitupdate.ui.*;
+
 public abstract class RemoteProcessor extends Processor<String> {
 
 	@Override
@@ -29,11 +31,12 @@ public abstract class RemoteProcessor extends Processor<String> {
 	}
 
 	@Override
-	public final void process(Repository repo, Git git, String remote) throws GitAPIException, IOException {
-		process(repo, git, remote, Constants.R_REMOTES + remote + "/");
+	public final void process(Repository repo, Git git, String remote, ReportData data)
+			throws GitAPIException, IOException {
+		process(repo, git, remote, Constants.R_REMOTES + remote + "/", data.newChild(remote));
 	}
 
-	public abstract void process(Repository repo, Git git, String remote, String fullRemote)
+	public abstract void process(Repository repo, Git git, String remote, String fullRemote, ReportData data)
 			throws GitAPIException, IOException;
 
 }

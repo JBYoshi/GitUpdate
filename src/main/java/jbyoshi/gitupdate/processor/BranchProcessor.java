@@ -23,6 +23,7 @@ import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 
 import jbyoshi.gitupdate.*;
+import jbyoshi.gitupdate.ui.*;
 
 public abstract class BranchProcessor extends Processor<Map.Entry<String, Ref>> {
 
@@ -32,10 +33,11 @@ public abstract class BranchProcessor extends Processor<Map.Entry<String, Ref>> 
 	}
 
 	@Override
-	public final void process(Repository repo, Git git, Map.Entry<String, Ref> branch)
+	public final void process(Repository repo, Git git, Map.Entry<String, Ref> branch, ReportData report)
 			throws GitAPIException, IOException {
-		process(repo, git, branch.getKey(), branch.getValue());
+		process(repo, git, branch.getKey(), branch.getValue(), report);
 	}
 
-	public abstract void process(Repository repo, Git git, String branch, Ref ref) throws GitAPIException, IOException;
+	public abstract void process(Repository repo, Git git, String branch, Ref ref, ReportData report)
+			throws GitAPIException, IOException;
 }

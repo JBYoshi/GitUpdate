@@ -19,8 +19,6 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-import javax.swing.*;
-
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.submodule.*;
@@ -28,6 +26,7 @@ import org.eclipse.jgit.submodule.*;
 import com.google.common.collect.*;
 
 import jbyoshi.gitupdate.processor.*;
+import jbyoshi.gitupdate.ui.*;
 
 public class GitUpdate {
 	private static final Set<File> updated = new HashSet<File>();
@@ -35,24 +34,15 @@ public class GitUpdate {
 			new Push());
 
 	public static void main(String[] args) {
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		File gitDir = new File(System.getProperty("user.home"), "git");
 		if (!gitDir.exists()) {
-			System.err.println("No such directory: " + gitDir);
+			UI.INSTANCE.newRootReportData("No such directory: " + gitDir);
 			return;
 		}
 		for (File repoDir : gitDir.listFiles()) {
 			update(repoDir);
 		}
-		System.out.println("========================================");
-		System.out.println("Done.");
-		for (Processor<?> processor : processors) {
-			processor.report();
-		}
+		UI.INSTANCE.finish();
 	}
 
 	public static void update(File repoDir) {
@@ -101,10 +91,10 @@ public class GitUpdate {
 			e.printStackTrace();
 		}
 
-		System.out.println("Updating " + dir.getName());
 		Git git = Git.wrap(repo);
+		ReportData report = UI.INSTANCE.newRootReportData(dir.getName());
 		for (Processor<?> processor : processors) {
-			processor.run(repo, git);
+			processor.run(repo, git, report.newChild(processor.getClass().getSimpleName()));
 		}
 	}
 }

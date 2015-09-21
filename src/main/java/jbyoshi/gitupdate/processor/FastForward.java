@@ -25,18 +25,20 @@ import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.lib.RefUpdate.*;
 import org.eclipse.jgit.revwalk.*;
 
+import jbyoshi.gitupdate.ui.*;
+
 public class FastForward extends BranchProcessor {
 
-	private int fastForwards;
-
 	@Override
-	public void process(Repository repo, Git git, String branch, Ref ref) throws GitAPIException, IOException {
-		tryFastForward(repo, ref, repo.getRef(new BranchConfig(repo.getConfig(), branch).getTrackingBranch()));
+	public void process(Repository repo, Git git, String branch, Ref ref, ReportData report)
+			throws GitAPIException, IOException {
+		tryFastForward(repo, ref, repo.getRef(new BranchConfig(repo.getConfig(), branch).getTrackingBranch()), report);
 		// TODO Don't hardcode this
-		tryFastForward(repo, ref, repo.getRef(Constants.R_REMOTES + "upstream/" + branch));
+		tryFastForward(repo, ref, repo.getRef(Constants.R_REMOTES + "upstream/" + branch), report);
 	}
 
-	private boolean tryFastForward(Repository repo, Ref ref, Ref target) throws GitAPIException, IOException {
+	private static boolean tryFastForward(Repository repo, Ref ref, Ref target, ReportData report)
+			throws GitAPIException, IOException {
 		if (ref == null || target == null) {
 			return false;
 		}
@@ -61,18 +63,18 @@ public class FastForward extends BranchProcessor {
 				switch (rc) {
 				case NEW:
 				case FAST_FORWARD:
-					System.out.println("Fast-forwarded " + ref.getName() + " to " + target.getName());
-					fastForwards++;
+					report.newChild(ref.getName() + " -> " + target.getName());
 					return true;
 				case REJECTED:
 				case LOCK_FAILURE:
-					System.err.println(new ConcurrentRefUpdateException(JGitText.get().couldNotLockHEAD,
-							refUpdate.getRef(), rc));
+					report.newErrorChild(
+							new ConcurrentRefUpdateException(JGitText.get().couldNotLockHEAD,
+									refUpdate.getRef(), rc));
 					break;
 				case NO_CHANGE:
 					break;
 				default:
-					System.err.println(new JGitInternalException(MessageFormat
+					report.newErrorChild(new JGitInternalException(MessageFormat
 							.format(JGitText.get().updatingRefFailed, ref.getName(), targetId.toString(), rc)));
 					break;
 				}
@@ -85,11 +87,10 @@ public class FastForward extends BranchProcessor {
 			if (result.getMergeStatus() == MergeResult.MergeStatus.ALREADY_UP_TO_DATE) {
 				// Ignore
 			} else if (result.getMergeStatus() == MergeResult.MergeStatus.FAST_FORWARD) {
-				System.out.println("Fast-forwarded " + ref.getName() + " to " + target.getName());
-				fastForwards++;
+				report.newChild("Fast-forwarded " + ref.getName() + " to " + target.getName());
 				return true;
 			} else {
-				System.err.println("Fast-forward failed: status " + result.getMergeStatus());
+				report.newErrorChild("Fast-forward failed: status " + result.getMergeStatus());
 			}
 		} catch (NoHeadException e) {
 			// Ignore
@@ -101,11 +102,6 @@ public class FastForward extends BranchProcessor {
 			System.err.println(e);
 		}
 		return false;
-	}
-
-	@Override
-	public void report() {
-		System.out.println(fastForwards + " branch" + (fastForwards == 1 ? "" : "es") + " fast forwarded.");
 	}
 
 }
