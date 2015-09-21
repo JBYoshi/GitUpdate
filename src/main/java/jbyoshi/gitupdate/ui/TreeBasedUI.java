@@ -24,12 +24,14 @@ import javax.swing.tree.*;
 public final class TreeBasedUI implements UI {
 	private final JFrame frame;
 	private final JTree tree;
+	private final DefaultTreeModel model;
 	private final GUIReportData root;
 
 	TreeBasedUI() {
 		frame = new JFrame("GitUpdate - Working");
 		root = new GUIReportData("Updates");
-		tree = new JTree(root.node);
+		model = new DefaultTreeModel(root.node);
+		tree = new JTree(model);
 		tree.setRootVisible(false);
 		tree.setShowsRootHandles(true);
 		frame.getContentPane().add(new JScrollPane(tree));
@@ -105,9 +107,8 @@ public final class TreeBasedUI implements UI {
 		@Override
 		public ReportData newChild(String text) {
 			GUIReportData child = new GUIReportData(text);
-			node.add(child.node);
-			tree.revalidate();
-			tree.repaint();
+			model.insertNodeInto(child.node, node, node.getChildCount());
+			model.nodeChanged(node);
 			return child;
 		}
 

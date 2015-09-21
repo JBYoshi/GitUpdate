@@ -16,8 +16,7 @@
 package jbyoshi.gitupdate.ui;
 
 public interface UI {
-	// TODO dynamically determine this
-	public static final UI INSTANCE = new ConsoleUI();
+	public static final UI INSTANCE = System.console() == null ? new TreeBasedUI() : new ConsoleUI();
 
 	public UsernamePasswordPair promptLogin(String prompt);
 
