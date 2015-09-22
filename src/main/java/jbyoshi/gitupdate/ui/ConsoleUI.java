@@ -33,29 +33,43 @@ public final class ConsoleUI implements UI {
 
 	@Override
 	public ReportData newRootReportData(String text) {
-		return new ConsoleReportData(System.out, text, 0);
+		return new ConsoleReportData(null, text);
 	}
 
-	static final class ConsoleReportData implements ReportData {
+	static final class ConsoleReportData extends ReportData {
+		private final ConsoleReportData parent;
 		private final int indent;
+		private final String line;
+		private boolean printed;
 
-		private ConsoleReportData(PrintStream stream, String text, int indent) {
-			this.indent = indent;
+		private ConsoleReportData(ConsoleReportData parent, String text) {
+			super(parent);
+			this.parent = parent;
+			this.indent = parent == null ? 0 : parent.indent + 1;
 			StringBuilder line = new StringBuilder();
 			for (int i = 0; i < indent; i++) {
 				line.append('\t');
 			}
-			System.out.println(line.append(text));
+			this.line = line.append(text).toString();
 		}
 
 		@Override
 		public ReportData newChild(String text) {
-			return new ConsoleReportData(System.out, text, indent + 1);
+			return new ConsoleReportData(this, text);
 		}
 
 		@Override
-		public ReportData newErrorChild(String text) {
-			return new ConsoleReportData(System.err, text, indent + 1);
+		protected void stateChanged() {
+			parent.stateChanged();
+			if (future || printed) {
+				return;
+			}
+			printed = true;
+			if (error) {
+				System.err.println(line);
+			} else {
+				System.out.println(line);
+			}
 		}
 	}
 

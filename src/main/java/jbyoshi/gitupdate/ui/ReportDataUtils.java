@@ -54,9 +54,9 @@ public final class ReportDataUtils {
 		}
 
 		private void print(ReportData data) {
-			data = data.newErrorChild(desc);
+			data = data.newChild(desc).error();
 			for (int i = indexBreak; i < stack.length; i++) {
-				data.newErrorChild(stack[i - indexBreak].toString());
+				data.newChild(stack[i - indexBreak].toString());
 				for (ErrorPrint child : causes.removeAll(stack.length - i + indexBreak - 1)) {
 					child.print(data);
 				}

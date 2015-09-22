@@ -44,7 +44,7 @@ public final class Fetch extends RemoteProcessor {
 				newId = "deleted";
 			}
 			text.append(oldId).append(" -> ").append(newId);
-			data.newChild(text.toString());
+			data.newChild(text.toString()).modified();
 		}
 	}
 

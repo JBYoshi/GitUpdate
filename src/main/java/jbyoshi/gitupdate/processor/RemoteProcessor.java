@@ -33,7 +33,9 @@ public abstract class RemoteProcessor extends Processor<String> {
 	@Override
 	public final void process(Repository repo, Git git, String remote, ReportData data)
 			throws GitAPIException, IOException {
-		process(repo, git, remote, Constants.R_REMOTES + remote + "/", data.newChild(remote));
+		data = data.newChild(remote).working();
+		process(repo, git, remote, Constants.R_REMOTES + remote + "/", data);
+		data.done();
 	}
 
 	public abstract void process(Repository repo, Git git, String remote, String fullRemote, ReportData data)

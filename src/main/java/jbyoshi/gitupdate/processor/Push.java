@@ -46,7 +46,7 @@ public class Push extends SingleProcessor {
 						String branchName = Utils.getShortBranch(update.getSrcRef());
 						ObjectId oldId = pushBranches.get(branchName);
 						String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
-						data.newChild(branchName + ": " + old + " -> " + update.getNewObjectId().name());
+						data.newChild(branchName + ": " + old + " -> " + update.getNewObjectId().name()).modified();
 					}
 				}
 			}

@@ -29,7 +29,7 @@ public final class TreeBasedUI implements UI {
 
 	TreeBasedUI() {
 		frame = new JFrame("GitUpdate - Working");
-		root = new GUIReportData("Updates");
+		root = new GUIReportData(null, "Updates");
 		model = new DefaultTreeModel(root.node);
 		tree = new JTree(model);
 		tree.setRootVisible(false);
@@ -97,25 +97,45 @@ public final class TreeBasedUI implements UI {
 		return child;
 	}
 
-	private final class GUIReportData implements ReportData {
+	private final class GUIReportData extends ReportData {
 		private final DefaultMutableTreeNode node;
+		private final String text;
 
-		private GUIReportData(String text) {
+		private GUIReportData(GUIReportData parent, String text) {
+			super(parent);
+			this.text = text;
 			node = new DefaultMutableTreeNode(text);
 		}
 
 		@Override
 		public ReportData newChild(String text) {
-			GUIReportData child = new GUIReportData(text);
+			GUIReportData child = new GUIReportData(this, text);
 			model.insertNodeInto(child.node, node, node.getChildCount());
 			model.nodeChanged(node);
 			return child;
 		}
 
 		@Override
-		public ReportData newErrorChild(String text) {
-			// TODO Maybe add a separate icon?
-			return newChild(text);
+		protected void stateChanged() {
+			// TODO This will be an icon later.
+			String status = "";
+			if (done) {
+				status += "D";
+			}
+			if (error) {
+				status += "E";
+			}
+			if (future) {
+				status += "F";
+			}
+			if (modified) {
+				status += "M";
+			}
+			if (working) {
+				status += "W";
+			}
+			node.setUserObject((status + " " + text).trim());
+			model.nodeChanged(node);
 		}
 	}
 

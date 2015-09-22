@@ -94,7 +94,11 @@ public class GitUpdate {
 		Git git = Git.wrap(repo);
 		ReportData report = UI.INSTANCE.newRootReportData(dir.getName());
 		for (Processor<?> processor : processors) {
-			processor.run(repo, git, report.newChild(processor.getClass().getSimpleName()));
+			ReportData child = report.newChild(processor.getClass().getSimpleName());
+			child.working();
+			processor.run(repo, git, child);
+			child.done();
 		}
+		report.done();
 	}
 }

@@ -63,7 +63,7 @@ public class FastForward extends BranchProcessor {
 				switch (rc) {
 				case NEW:
 				case FAST_FORWARD:
-					report.newChild(ref.getName() + " -> " + target.getName());
+					report.newChild(ref.getName() + " -> " + target.getName()).modified();
 					return true;
 				case REJECTED:
 				case LOCK_FAILURE:
@@ -87,10 +87,10 @@ public class FastForward extends BranchProcessor {
 			if (result.getMergeStatus() == MergeResult.MergeStatus.ALREADY_UP_TO_DATE) {
 				// Ignore
 			} else if (result.getMergeStatus() == MergeResult.MergeStatus.FAST_FORWARD) {
-				report.newChild("Fast-forwarded " + ref.getName() + " to " + target.getName());
+				report.newChild("Fast-forwarded " + ref.getName() + " to " + target.getName()).modified();
 				return true;
 			} else {
-				report.newErrorChild("Fast-forward failed: status " + result.getMergeStatus());
+				report.newChild("Fast-forward failed: status " + result.getMergeStatus()).error();
 			}
 		} catch (NoHeadException e) {
 			// Ignore

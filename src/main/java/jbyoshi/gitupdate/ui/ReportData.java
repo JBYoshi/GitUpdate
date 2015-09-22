@@ -15,12 +15,70 @@
  */
 package jbyoshi.gitupdate.ui;
 
-public interface ReportData {
-	public ReportData newChild(String text);
+public abstract class ReportData {
+	protected boolean error, working, future, modified, done;
+	private final ReportData parent;
 
-	public ReportData newErrorChild(String text);
+	protected ReportData(ReportData parent) {
+		this.parent = parent;
+	}
 
-	public default void newErrorChild(Throwable e) {
+	public abstract ReportData newChild(String text);
+
+	public void newErrorChild(Throwable e) {
 		ReportDataUtils.printError(e, this);
+	}
+
+	public ReportData future() {
+		if (parent != null) {
+			parent.future();
+		}
+		if (!working) {
+			future = true;
+		}
+		done = false;
+		return this;
+	}
+
+	public ReportData error() {
+		if (parent != null) {
+			parent.error();
+		}
+		error = true;
+		stateChanged();
+		return this;
+	}
+
+	public ReportData working() {
+		if (parent != null) {
+			parent.working();
+		}
+		future = false;
+		working = true;
+		stateChanged();
+		return this;
+	}
+
+	public ReportData done() {
+		if (parent != null) {
+			parent.working();
+		}
+		future = false;
+		working = false;
+		done = true;
+		stateChanged();
+		return this;
+	}
+
+	public ReportData modified() {
+		if (parent != null) {
+			parent.modified();
+		}
+		modified = true;
+		stateChanged();
+		return this;
+	}
+
+	protected void stateChanged() {
 	}
 }
