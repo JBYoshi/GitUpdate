@@ -25,19 +25,19 @@ import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.lib.RefUpdate.*;
 import org.eclipse.jgit.revwalk.*;
 
-import jbyoshi.gitupdate.ui.*;
+import jbyoshi.gitupdate.*;
 
 public class FastForward extends BranchProcessor {
 
 	@Override
-	public void process(Repository repo, Git git, String branch, Ref ref, ReportData report)
+	public void process(Repository repo, Git git, String branch, Ref ref, Report report)
 			throws GitAPIException, IOException {
 		tryFastForward(repo, ref, repo.getRef(new BranchConfig(repo.getConfig(), branch).getTrackingBranch()), report);
 		// TODO Don't hardcode this
 		tryFastForward(repo, ref, repo.getRef(Constants.R_REMOTES + "upstream/" + branch), report);
 	}
 
-	private static boolean tryFastForward(Repository repo, Ref ref, Ref target, ReportData report)
+	private static boolean tryFastForward(Repository repo, Ref ref, Ref target, Report report)
 			throws GitAPIException, IOException {
 		if (ref == null || target == null) {
 			return false;

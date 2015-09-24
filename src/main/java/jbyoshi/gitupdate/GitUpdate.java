@@ -26,38 +26,39 @@ import org.eclipse.jgit.submodule.*;
 import com.google.common.collect.*;
 
 import jbyoshi.gitupdate.processor.*;
-import jbyoshi.gitupdate.ui.*;
 
 public class GitUpdate {
 	private static final Set<File> updated = new HashSet<File>();
-	private static final ImmutableList<Processor<?>> processors = ImmutableList.of(new Fetch(), new FastForward(),
+	private static final ImmutableList<Processor> processors = ImmutableList.of(new Fetch(), new FastForward(),
 			new Push());
 
 	public static void main(String[] args) {
 		File gitDir = new File(System.getProperty("user.home"), "git");
 		if (!gitDir.exists()) {
-			UI.INSTANCE.newRootReportData("No such directory: " + gitDir);
+			new Report(null, "No such directory: " + gitDir).error();
 			return;
 		}
+		Task root = new Task("GitUpdate", report -> {
+		});
 		for (File repoDir : gitDir.listFiles()) {
-			update(repoDir);
+			update(repoDir, root);
 		}
-		UI.INSTANCE.finish();
+		root.start();
 	}
 
-	public static void update(File repoDir) {
+	public static void update(File repoDir, Task root) {
 		try {
 			if (!repoDir.isDirectory()) {
 				return;
 			}
 			Repository repo = new RepositoryBuilder().setWorkTree(repoDir).setMustExist(true).build();
-			update(repo);
+			update(repo, root);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void update(Repository repo) {
+	public static void update(Repository repo, Task root) {
 		File dir = repo.getDirectory();
 		if (dir.getName().equals(".git")) {
 			dir = dir.getParentFile();
@@ -81,7 +82,7 @@ public class GitUpdate {
 				SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo);
 				try {
 					while (submodules.next()) {
-						update(submodules.getRepository());
+						update(submodules.getRepository(), root);
 					}
 				} finally {
 					submodules.release();
@@ -92,13 +93,14 @@ public class GitUpdate {
 		}
 
 		Git git = Git.wrap(repo);
-		ReportData report = UI.INSTANCE.newRootReportData(dir.getName());
-		for (Processor<?> processor : processors) {
-			ReportData child = report.newChild(processor.getClass().getSimpleName());
-			child.working();
-			processor.run(repo, git, child);
-			child.done();
+		Task report = root.newChild(dir.getName());
+		for (Processor processor : processors) {
+			Task child = report.newChild(processor.getClass().getSimpleName());
+			try {
+				processor.registerTasks(repo, git, child);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-		report.done();
 	}
 }

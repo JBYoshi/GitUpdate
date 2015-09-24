@@ -21,12 +21,11 @@ import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.transport.*;
 
 import jbyoshi.gitupdate.*;
-import jbyoshi.gitupdate.ui.*;
 
 public final class Fetch extends RemoteProcessor {
 
 	@Override
-	public void process(Repository repo, Git git, String remote, String fullRemote, ReportData data)
+	public void process(Repository repo, Git git, String remote, String fullRemote, Report report)
 			throws GitAPIException {
 		FetchResult result = git.fetch().setRemoveDeletedRefs(true).setCredentialsProvider(Prompts.INSTANCE)
 				.setRemote(remote).call();
@@ -44,7 +43,7 @@ public final class Fetch extends RemoteProcessor {
 				newId = "deleted";
 			}
 			text.append(oldId).append(" -> ").append(newId);
-			data.newChild(text.toString()).modified();
+			report.newChild(text.toString()).modified();
 		}
 	}
 

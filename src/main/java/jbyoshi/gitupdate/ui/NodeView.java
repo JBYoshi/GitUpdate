@@ -13,26 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate.processor;
+package jbyoshi.gitupdate.ui;
 
-import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.lib.*;
+public interface NodeView {
+	public NodeView newChild(String text);
 
-import jbyoshi.gitupdate.*;
-
-public abstract class SingleProcessor extends Processor {
-
-	@Override
-	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
-		root.newChild(getClass().getName(), report -> {
-			try {
-				process(repo, git, report);
-			} catch (Exception e) {
-				report.newErrorChild(e);
-			}
-		});
-	}
-
-	public abstract void process(Repository repo, Git git, Report report) throws Exception;
-
+	public void stateChanged(boolean error, boolean working, boolean future, boolean modified, boolean done);
 }

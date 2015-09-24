@@ -24,12 +24,11 @@ import org.eclipse.jgit.transport.*;
 import com.google.common.collect.*;
 
 import jbyoshi.gitupdate.*;
-import jbyoshi.gitupdate.ui.*;
 
 public class Push extends SingleProcessor {
 
 	@Override
-	public void process(Repository repo, Git git, ReportData data) throws Exception {
+	public void process(Repository repo, Git git, Report data) throws Exception {
 		Map<String, Ref> pushRefs = Utils.getLocalBranches(repo);
 		pushRefs = Maps.filterKeys(pushRefs, (k) -> new BranchConfig(repo.getConfig(), k).getRemote() != null);
 		Map<String, ObjectId> pushBranches = Maps.transformValues(pushRefs, Ref::getObjectId);

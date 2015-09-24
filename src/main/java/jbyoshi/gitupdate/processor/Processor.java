@@ -16,41 +16,10 @@
 package jbyoshi.gitupdate.processor;
 
 import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.errors.*;
 import org.eclipse.jgit.lib.*;
 
-import jbyoshi.gitupdate.ui.*;
+import jbyoshi.gitupdate.*;
 
-public abstract class Processor<T> {
-
-	public void run(Repository repo, Git git, ReportData report) {
-		Iterable<T> keys;
-		try {
-			keys = getKeys(repo);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return;
-		}
-		for (T key : keys) {
-			try {
-				process(repo, git, key, report);
-			} catch (TransportException e) {
-				if (e.getCause() instanceof NoRemoteRepositoryException) {
-					System.err.println(e.getCause());
-				} else if (e.getMessage().contains("Auth cancel")) {
-					System.exit(0);
-				} else {
-					e.printStackTrace();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	protected abstract Iterable<T> getKeys(Repository repo) throws Exception;
-
-	protected abstract void process(Repository repo, Git git, T key, ReportData report) throws Exception;
-
+public abstract class Processor {
+	public abstract void registerTasks(Repository repo, Git git, Task root) throws Exception;
 }

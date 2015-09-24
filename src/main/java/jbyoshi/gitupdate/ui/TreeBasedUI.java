@@ -25,15 +25,37 @@ public final class TreeBasedUI implements UI {
 	private final JFrame frame;
 	private final JTree tree;
 	private final DefaultTreeModel model;
-	private final GUIReportData root;
+	private final GUINodeView root;
 
 	TreeBasedUI() {
-		frame = new JFrame("GitUpdate - Working");
-		root = new GUIReportData(null, "Updates");
-		model = new DefaultTreeModel(root.node);
+		frame = new JFrame("GitUpdate - Loading");
+		root = new GUINodeView("Updates") {
+			@Override
+			public void stateChanged(boolean error, boolean working, boolean future, boolean modified, boolean done) {
+				super.stateChanged(error, working, future, modified, done);
+				if (done) {
+					if (modified) {
+						frame.setTitle("GitUpdate - Updated");
+					} else {
+						frame.setTitle("GitUpdate - Done");
+					}
+				} else if (working) {
+					frame.setTitle("GitUpdate - Working");
+				}
+			}
+		};
+		model = new DefaultTreeModel(root);
 		tree = new JTree(model);
 		tree.setRootVisible(false);
 		tree.setShowsRootHandles(true);
+		tree.setCellRenderer(new DefaultTreeCellRenderer() {
+			@Override
+			public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
+					boolean isLeaf, int row, boolean focused) {
+				setIcon(((GUINodeView) value).icon);
+				return super.getTreeCellRendererComponent(tree, value, selected, expanded, isLeaf, row, focused);
+			}
+		});
 		frame.getContentPane().add(new JScrollPane(tree));
 		frame.setMinimumSize(new Dimension(400, 600));
 		frame.pack();
@@ -91,51 +113,66 @@ public final class TreeBasedUI implements UI {
 	}
 
 	@Override
-	public ReportData newRootReportData(String text) {
-		ReportData child = root.newChild(text);
-		tree.expandPath(new TreePath(root.node.getPath()));
-		return child;
+	public NodeView getRoot() {
+		return root;
 	}
 
-	private final class GUIReportData extends ReportData {
-		private final DefaultMutableTreeNode node;
-		private final String text;
+	private class GUINodeView extends DefaultMutableTreeNode implements NodeView {
+		private Icon icon = ICON_PLAIN;
+		private static final Icon ICON_PLAIN;
+		private static final Icon ICON_FUTURE;
+		private static final Icon ICON_WORKING;
+		private static final Icon ICON_MODIFIED;
+		private static final Icon ICON_DONE;
+		private static final Icon ICON_ERROR;
+		private static final Icon ICON_WORKING_MODIFIED;
+		private static final Icon ICON_WORKING_ERROR;
+		private static final Icon ICON_MODIFIED_ERROR;
+		private static final Icon ICON_WORKING_MODIFIED_ERROR;
 
-		private GUIReportData(GUIReportData parent, String text) {
-			super(parent);
-			this.text = text;
-			node = new DefaultMutableTreeNode(text);
+		private GUINodeView(String text) {
+			super(text);
 		}
 
 		@Override
-		public ReportData newChild(String text) {
-			GUIReportData child = new GUIReportData(this, text);
-			model.insertNodeInto(child.node, node, node.getChildCount());
-			model.nodeChanged(node);
+		public NodeView newChild(String text) {
+			GUINodeView child = new GUINodeView(text);
+			model.insertNodeInto(child, this, getChildCount());
+			model.nodeChanged(this);
+			tree.expandPath(new TreePath(root.getPath()));
 			return child;
 		}
 
 		@Override
-		protected void stateChanged() {
-			// TODO This will be an icon later.
-			String status = "";
-			if (done) {
-				status += "D";
-			}
-			if (error) {
-				status += "E";
-			}
+		public void stateChanged(boolean error, boolean working, boolean future, boolean modified, boolean done) {
 			if (future) {
-				status += "F";
+				icon = ICON_FUTURE;
+			} else if (working) {
+				if (error) {
+					if (modified) {
+						icon = ICON_WORKING_MODIFIED_ERROR;
+					} else {
+						icon = ICON_WORKING_ERROR;
+					}
+				} else if (modified) {
+					icon = ICON_WORKING_MODIFIED;
+				} else {
+					icon = ICON_WORKING;
+				}
+			} else if (error) {
+				if (modified) {
+					icon = ICON_MODIFIED_ERROR;
+				} else {
+					icon = ICON_ERROR;
+				}
+			} else if (modified) {
+				icon = ICON_MODIFIED;
+			} else if (done) {
+				icon = ICON_DONE;
+			} else {
+				icon = ICON_PLAIN;
 			}
-			if (modified) {
-				status += "M";
-			}
-			if (working) {
-				status += "W";
-			}
-			node.setUserObject((status + " " + text).trim());
-			model.nodeChanged(node);
+			model.nodeChanged(this);
 		}
 	}
 
@@ -145,11 +182,6 @@ public final class TreeBasedUI implements UI {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void finish() {
-		frame.setTitle("GitUpdate - Finished");
 	}
 
 }

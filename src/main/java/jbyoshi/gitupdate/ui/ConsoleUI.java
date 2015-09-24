@@ -19,6 +19,29 @@ import java.io.*;
 
 public final class ConsoleUI implements UI {
 	private final Console console = System.console();
+	private static final NodeView root = new NodeView() {
+		@Override
+		public NodeView newChild(String text) {
+			return new ConsoleNodeView(null, text);
+		}
+
+		@Override
+		public void stateChanged(boolean error, boolean working, boolean future, boolean modified, boolean done) {
+			if (done) {
+				System.out.println("========================================");
+				if (error) {
+					System.err.println("Errored. See the log for details.");
+				} else {
+					System.out.println("Done.");
+				}
+				if (modified) {
+					System.out.println("Changes have been made. See the log for details.");
+				} else {
+					System.out.println("No changes have been made.");
+				}
+			}
+		}
+	};
 
 	@Override
 	public UsernamePasswordPair promptLogin(String prompt) {
@@ -32,19 +55,16 @@ public final class ConsoleUI implements UI {
 	}
 
 	@Override
-	public ReportData newRootReportData(String text) {
-		return new ConsoleReportData(null, text);
+	public NodeView getRoot() {
+		return root;
 	}
 
-	static final class ConsoleReportData extends ReportData {
-		private final ConsoleReportData parent;
+	private static final class ConsoleNodeView implements NodeView {
 		private final int indent;
 		private final String line;
 		private boolean printed;
 
-		private ConsoleReportData(ConsoleReportData parent, String text) {
-			super(parent);
-			this.parent = parent;
+		private ConsoleNodeView(ConsoleNodeView parent, String text) {
 			this.indent = parent == null ? 0 : parent.indent + 1;
 			StringBuilder line = new StringBuilder();
 			for (int i = 0; i < indent; i++) {
@@ -54,13 +74,12 @@ public final class ConsoleUI implements UI {
 		}
 
 		@Override
-		public ReportData newChild(String text) {
-			return new ConsoleReportData(this, text);
+		public NodeView newChild(String text) {
+			return new ConsoleNodeView(this, text);
 		}
 
 		@Override
-		protected void stateChanged() {
-			parent.stateChanged();
+		public void stateChanged(boolean error, boolean working, boolean future, boolean modified, boolean done) {
 			if (future || printed) {
 				return;
 			}
@@ -71,11 +90,5 @@ public final class ConsoleUI implements UI {
 				System.out.println(line);
 			}
 		}
-	}
-
-	@Override
-	public void finish() {
-		System.out.println("========================================");
-		System.out.println("Done.");
 	}
 }

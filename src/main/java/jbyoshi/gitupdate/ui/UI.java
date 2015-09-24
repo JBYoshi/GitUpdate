@@ -22,8 +22,6 @@ public interface UI {
 
 	public char[] promptPassword(String prompt);
 
-	public ReportData newRootReportData(String text);
-
-	public void finish();
+	public NodeView getRoot();
 
 }

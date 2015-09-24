@@ -21,24 +21,25 @@ import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 
-import jbyoshi.gitupdate.ui.*;
+import jbyoshi.gitupdate.*;
 
-public abstract class RemoteProcessor extends Processor<String> {
-
-	@Override
-	public final Iterable<String> getKeys(Repository repo) {
-		return repo.getRemoteNames();
-	}
+public abstract class RemoteProcessor extends Processor {
 
 	@Override
-	public final void process(Repository repo, Git git, String remote, ReportData data)
-			throws GitAPIException, IOException {
-		data = data.newChild(remote).working();
-		process(repo, git, remote, Constants.R_REMOTES + remote + "/", data);
-		data.done();
+	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
+		Task me = root.newChild(getClass().getName());
+		for (String remote : repo.getRemoteNames()) {
+			me.newChild(remote, report -> {
+				try {
+					process(repo, git, remote, Constants.R_REMOTES + remote + "/", report);
+				} catch (Exception e) {
+					report.newErrorChild(e);
+				}
+			});
+		}
 	}
 
-	public abstract void process(Repository repo, Git git, String remote, String fullRemote, ReportData data)
+	public abstract void process(Repository repo, Git git, String remote, String fullRemote, Report report)
 			throws GitAPIException, IOException;
 
 }

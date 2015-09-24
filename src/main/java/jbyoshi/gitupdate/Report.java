@@ -13,34 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate.ui;
+package jbyoshi.gitupdate;
 
-public abstract class ReportData {
-	protected boolean error, working, future, modified, done;
-	private final ReportData parent;
+import jbyoshi.gitupdate.ui.*;
 
-	protected ReportData(ReportData parent) {
+public final class Report {
+	boolean error, modified, future, working, done;
+	private final Report parent;
+	final NodeView view;
+
+	Report(Report parent, String text) {
 		this.parent = parent;
+		this.view = parent == null ? UI.INSTANCE.getRoot() : parent.view.newChild(text);
 	}
 
-	public abstract ReportData newChild(String text);
+	public Report newChild(String text) {
+		return new Report(this, text);
+	}
 
 	public void newErrorChild(Throwable e) {
 		ReportDataUtils.printError(e, this);
 	}
 
-	public ReportData future() {
-		if (parent != null) {
-			parent.future();
-		}
-		if (!working) {
-			future = true;
-		}
-		done = false;
-		return this;
-	}
-
-	public ReportData error() {
+	public Report error() {
 		if (parent != null) {
 			parent.error();
 		}
@@ -49,28 +44,7 @@ public abstract class ReportData {
 		return this;
 	}
 
-	public ReportData working() {
-		if (parent != null) {
-			parent.working();
-		}
-		future = false;
-		working = true;
-		stateChanged();
-		return this;
-	}
-
-	public ReportData done() {
-		if (parent != null) {
-			parent.working();
-		}
-		future = false;
-		working = false;
-		done = true;
-		stateChanged();
-		return this;
-	}
-
-	public ReportData modified() {
+	public Report modified() {
 		if (parent != null) {
 			parent.modified();
 		}
@@ -79,6 +53,8 @@ public abstract class ReportData {
 		return this;
 	}
 
-	protected void stateChanged() {
+	void stateChanged() {
+		view.stateChanged(error, working, future, modified, done);
 	}
+
 }

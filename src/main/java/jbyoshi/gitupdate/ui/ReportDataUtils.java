@@ -17,9 +17,11 @@ package jbyoshi.gitupdate.ui;
 
 import com.google.common.collect.*;
 
+import jbyoshi.gitupdate.*;
+
 public final class ReportDataUtils {
 
-	public static void printError(Throwable e, ReportData data) {
+	public static void printError(Throwable e, Report data) {
 		new ErrorPrint(null, e, "").print(data);
 	}
 
@@ -53,7 +55,7 @@ public final class ReportDataUtils {
 			causes.put(print.indexBreak, print);
 		}
 
-		private void print(ReportData data) {
+		private void print(Report data) {
 			data = data.newChild(desc).error();
 			for (int i = indexBreak; i < stack.length; i++) {
 				data.newChild(stack[i - indexBreak].toString());

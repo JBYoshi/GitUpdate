@@ -23,21 +23,23 @@ import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 
 import jbyoshi.gitupdate.*;
-import jbyoshi.gitupdate.ui.*;
 
-public abstract class BranchProcessor extends Processor<Map.Entry<String, Ref>> {
-
-	@Override
-	public final Iterable<Map.Entry<String, Ref>> getKeys(Repository repo) throws IOException {
-		return Utils.getLocalBranches(repo).entrySet();
-	}
+public abstract class BranchProcessor extends Processor {
 
 	@Override
-	public final void process(Repository repo, Git git, Map.Entry<String, Ref> branch, ReportData report)
-			throws GitAPIException, IOException {
-		process(repo, git, branch.getKey(), branch.getValue(), report);
+	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
+		Task me = root.newChild(getClass().getName());
+		for (Map.Entry<String, Ref> branch : Utils.getLocalBranches(repo).entrySet()) {
+			me.newChild(branch.getKey(), report -> {
+				try {
+					process(repo, git, branch.getKey(), branch.getValue(), report);
+				} catch (Exception e) {
+					report.newErrorChild(e);
+				}
+			});
+		}
 	}
 
-	public abstract void process(Repository repo, Git git, String branch, Ref ref, ReportData report)
+	public abstract void process(Repository repo, Git git, String branch, Ref ref, Report report)
 			throws GitAPIException, IOException;
 }
