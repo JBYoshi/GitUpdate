@@ -21,6 +21,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.tree.*;
 
+@SuppressWarnings("serial")
 public final class TreeBasedUI implements UI {
 	private final JFrame frame;
 	private final JTree tree;
