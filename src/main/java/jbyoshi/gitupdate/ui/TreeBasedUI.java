@@ -27,6 +27,17 @@ public final class TreeBasedUI implements UI {
 	private final DefaultTreeModel model;
 	private final GUINodeView root;
 
+	private static final Icon ICON_PLAIN = getIcon("plain");
+	private static final Icon ICON_FUTURE = getIcon("future");
+	private static final Icon ICON_WORKING = getIcon("working");
+	private static final Icon ICON_MODIFIED = getIcon("modified");
+	private static final Icon ICON_DONE = getIcon("done");
+	private static final Icon ICON_ERROR = getIcon("error");
+	private static final Icon ICON_WORKING_MODIFIED = getIcon("working-modified");
+	private static final Icon ICON_WORKING_ERROR = getIcon("working-error");
+	private static final Icon ICON_MODIFIED_ERROR = getIcon("modified-error");
+	private static final Icon ICON_WORKING_MODIFIED_ERROR = getIcon("working-modified-error");
+
 	TreeBasedUI() {
 		frame = new JFrame("GitUpdate - Loading");
 		root = new GUINodeView("Updates") {
@@ -52,8 +63,9 @@ public final class TreeBasedUI implements UI {
 			@Override
 			public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
 					boolean isLeaf, int row, boolean focused) {
+				super.getTreeCellRendererComponent(tree, value, selected, expanded, isLeaf, row, focused);
 				setIcon(((GUINodeView) value).icon);
-				return super.getTreeCellRendererComponent(tree, value, selected, expanded, isLeaf, row, focused);
+				return this;
 			}
 		});
 		frame.getContentPane().add(new JScrollPane(tree));
@@ -119,16 +131,6 @@ public final class TreeBasedUI implements UI {
 
 	private class GUINodeView extends DefaultMutableTreeNode implements NodeView {
 		private Icon icon = ICON_PLAIN;
-		private static final Icon ICON_PLAIN;
-		private static final Icon ICON_FUTURE;
-		private static final Icon ICON_WORKING;
-		private static final Icon ICON_MODIFIED;
-		private static final Icon ICON_DONE;
-		private static final Icon ICON_ERROR;
-		private static final Icon ICON_WORKING_MODIFIED;
-		private static final Icon ICON_WORKING_ERROR;
-		private static final Icon ICON_MODIFIED_ERROR;
-		private static final Icon ICON_WORKING_MODIFIED_ERROR;
 
 		private GUINodeView(String text) {
 			super(text);
@@ -182,6 +184,10 @@ public final class TreeBasedUI implements UI {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static Icon getIcon(String name) {
+		return new ImageIcon(TreeBasedUI.class.getResource("icons/" + name + ".png"));
 	}
 
 }
