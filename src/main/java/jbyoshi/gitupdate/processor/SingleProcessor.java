@@ -24,7 +24,7 @@ public abstract class SingleProcessor extends Processor {
 
 	@Override
 	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
-		root.newChild(getClass().getName(), report -> {
+		root.newChild(getClass().getSimpleName(), report -> {
 			try {
 				process(repo, git, report);
 			} catch (Exception e) {

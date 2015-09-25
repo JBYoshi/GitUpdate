@@ -27,7 +27,7 @@ public abstract class RemoteProcessor extends Processor {
 
 	@Override
 	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
-		Task me = root.newChild(getClass().getName());
+		Task me = root.newChild(getClass().getSimpleName());
 		for (String remote : repo.getRemoteNames()) {
 			me.newChild(remote, report -> {
 				try {

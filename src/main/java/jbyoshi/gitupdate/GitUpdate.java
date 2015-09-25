@@ -92,11 +92,10 @@ public class GitUpdate {
 		}
 
 		Git git = Git.wrap(repo);
-		Task report = root.newChild(dir.getName());
+		Task repoTask = root.newChild(dir.getName());
 		for (Processor processor : processors) {
-			Task child = report.newChild(processor.getClass().getSimpleName());
 			try {
-				processor.registerTasks(repo, git, child);
+				processor.registerTasks(repo, git, repoTask);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

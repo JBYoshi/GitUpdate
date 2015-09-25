@@ -28,7 +28,7 @@ public abstract class BranchProcessor extends Processor {
 
 	@Override
 	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
-		Task me = root.newChild(getClass().getName());
+		Task me = root.newChild(getClass().getSimpleName());
 		for (Map.Entry<String, Ref> branch : Utils.getLocalBranches(repo).entrySet()) {
 			me.newChild(branch.getKey(), report -> {
 				try {
