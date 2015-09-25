@@ -38,8 +38,7 @@ public class GitUpdate {
 			new Report(null, "No such directory: " + gitDir).error();
 			return;
 		}
-		Task root = new Task("GitUpdate", report -> {
-		});
+		Task root = new Task("GitUpdate");
 		for (File repoDir : gitDir.listFiles()) {
 			update(repoDir, root);
 		}

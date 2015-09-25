@@ -23,8 +23,9 @@ public final class Task {
 	private final Set<Task> children = new LinkedHashSet<>();
 	private final Report report;
 
-	Task(String text, Consumer<Report> code) {
-		this(null, text, code);
+	Task(String text) {
+		this(null, text, report -> {
+		});
 	}
 
 	private Task(Report parentReport, String text, Consumer<Report> code) {
