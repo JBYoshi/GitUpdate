@@ -35,7 +35,7 @@ public class GitUpdate {
 	public static void main(String[] args) {
 		File gitDir = new File(System.getProperty("user.home"), "git");
 		if (!gitDir.exists()) {
-			new Report(null, "No such directory: " + gitDir).error();
+			new Report(new Report(null, "Error").error(), "No such directory: " + gitDir).error();
 			return;
 		}
 		Task root = new Task("GitUpdate");
