@@ -38,6 +38,10 @@ public class GitUpdate {
 			new Report(new Report(null, "Error").error(), "No such directory: " + gitDir).error();
 			return;
 		}
+		if (gitDir.list().length == 0) {
+			new Report(new Report(null, "Error").error(), "No folders in " + gitDir).error();
+			return;
+		}
 		Task root = new Task("GitUpdate");
 		for (File repoDir : gitDir.listFiles()) {
 			update(repoDir, root);
