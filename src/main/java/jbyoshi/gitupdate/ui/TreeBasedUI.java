@@ -70,7 +70,7 @@ public final class TreeBasedUI implements UI {
 			}
 		});
 		frame.getContentPane().add(new JScrollPane(tree));
-		frame.setMinimumSize(new Dimension(400, 600));
+		frame.setMinimumSize(new Dimension(500, 600));
 		frame.pack();
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setVisible(true);
