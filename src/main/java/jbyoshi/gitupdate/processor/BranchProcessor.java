@@ -15,11 +15,9 @@
  */
 package jbyoshi.gitupdate.processor;
 
-import java.io.*;
 import java.util.*;
 
 import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 
 import jbyoshi.gitupdate.*;
@@ -30,16 +28,21 @@ public abstract class BranchProcessor extends Processor {
 	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
 		Task me = root.newChild(getClass().getSimpleName());
 		for (Map.Entry<String, Ref> branch : Utils.getLocalBranches(repo).entrySet()) {
-			me.newChild(branch.getKey(), report -> {
-				try {
-					process(repo, git, branch.getKey(), branch.getValue(), report);
-				} catch (Exception e) {
-					report.newErrorChild(e);
-				}
-			});
+			if (filter(repo, git, branch.getKey(), branch.getValue())) {
+				me.newChild(branch.getKey(), report -> {
+					try {
+						process(repo, git, branch.getKey(), branch.getValue(), report);
+					} catch (Exception e) {
+						report.newErrorChild(e);
+					}
+				});
+			}
 		}
 	}
 
-	public abstract void process(Repository repo, Git git, String branch, Ref ref, Report report)
-			throws GitAPIException, IOException;
+	protected abstract void process(Repository repo, Git git, String branch, Ref ref, Report report) throws Exception;
+
+	protected boolean filter(Repository repo, Git git, String branch, Ref ref) throws Exception {
+		return true;
+	}
 }

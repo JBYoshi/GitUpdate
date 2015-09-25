@@ -15,41 +15,33 @@
  */
 package jbyoshi.gitupdate.processor;
 
-import java.util.*;
-
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.transport.*;
 
-import com.google.common.collect.*;
-
 import jbyoshi.gitupdate.*;
 
-public class Push extends SingleProcessor {
+public class Push extends BranchProcessor {
 
 	@Override
-	public void process(Repository repo, Git git, Report data) throws Exception {
-		Map<String, Ref> pushRefs = Utils.getLocalBranches(repo);
-		pushRefs = Maps.filterKeys(pushRefs, (k) -> new BranchConfig(repo.getConfig(), k).getRemote() != null);
-		Map<String, ObjectId> pushBranches = Maps.transformValues(pushRefs, Ref::getObjectId);
-		pushBranches = Maps.filterValues(pushBranches, (v) -> v != null);
-
-		if (!pushBranches.isEmpty()) {
-			PushCommand push = git.push().setCredentialsProvider(Prompts.INSTANCE).setTimeout(5);
-			for (String branch : pushBranches.keySet()) {
-				push.add(Constants.R_HEADS + branch);
-			}
-			for (PushResult result : push.call()) {
-				for (RemoteRefUpdate update : result.getRemoteUpdates()) {
-					if (update.getStatus() == RemoteRefUpdate.Status.OK) {
-						String branchName = Utils.getShortBranch(update.getSrcRef());
-						ObjectId oldId = pushBranches.get(branchName);
-						String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
-						data.newChild(branchName + ": " + old + " -> " + update.getNewObjectId().name()).modified();
-					}
+	public void process(Repository repo, Git git, String branch, Ref ref, Report data) throws Exception {
+		ObjectId oldId = ref.getObjectId();
+		PushCommand push = git.push().setCredentialsProvider(Prompts.INSTANCE).setTimeout(5)
+				.add(Constants.R_HEADS + branch);
+		for (PushResult result : push.call()) {
+			for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+				if (update.getStatus() == RemoteRefUpdate.Status.OK) {
+					String branchName = Utils.getShortBranch(update.getSrcRef());
+					String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
+					data.newChild(branchName + ": " + old + " -> " + update.getNewObjectId().name()).modified();
 				}
 			}
 		}
+	}
+
+	@Override
+	protected boolean filter(Repository repo, Git git, String branch, Ref ref) {
+		return new BranchConfig(repo.getConfig(), branch).getRemote() != null && ref.getObjectId() != null;
 	}
 
 }
