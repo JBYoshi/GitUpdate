@@ -20,7 +20,7 @@ import jbyoshi.gitupdate.ui.*;
 public final class Report {
 	boolean error, modified, future, working, done;
 	private final Report parent;
-	final NodeView view;
+	final ReportView view;
 
 	Report(Report parent, String text) {
 		this.parent = parent;

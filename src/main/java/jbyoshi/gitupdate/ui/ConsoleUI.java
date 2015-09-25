@@ -19,9 +19,9 @@ import java.io.*;
 
 public final class ConsoleUI implements UI {
 	private final Console console = System.console();
-	private static final NodeView root = new NodeView() {
+	private static final ReportView root = new ReportView() {
 		@Override
-		public NodeView newChild(String text) {
+		public ReportView newChild(String text) {
 			return new ConsoleNodeView(null, text);
 		}
 
@@ -55,11 +55,11 @@ public final class ConsoleUI implements UI {
 	}
 
 	@Override
-	public NodeView getRoot() {
+	public ReportView getRoot() {
 		return root;
 	}
 
-	private static final class ConsoleNodeView implements NodeView {
+	private static final class ConsoleNodeView implements ReportView {
 		private final int indent;
 		private final String line;
 		private boolean printed;
@@ -74,7 +74,7 @@ public final class ConsoleUI implements UI {
 		}
 
 		@Override
-		public NodeView newChild(String text) {
+		public ReportView newChild(String text) {
 			return new ConsoleNodeView(this, text);
 		}
 

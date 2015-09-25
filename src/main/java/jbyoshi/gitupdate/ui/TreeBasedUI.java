@@ -126,11 +126,11 @@ public final class TreeBasedUI implements UI {
 	}
 
 	@Override
-	public NodeView getRoot() {
+	public ReportView getRoot() {
 		return root;
 	}
 
-	private class GUINodeView extends DefaultMutableTreeNode implements NodeView {
+	private class GUINodeView extends DefaultMutableTreeNode implements ReportView {
 		private Icon icon = ICON_PLAIN;
 
 		private GUINodeView(String text) {
@@ -138,7 +138,7 @@ public final class TreeBasedUI implements UI {
 		}
 
 		@Override
-		public NodeView newChild(String text) {
+		public ReportView newChild(String text) {
 			GUINodeView child = new GUINodeView(text);
 			model.insertNodeInto(child, this, getChildCount());
 			model.nodeChanged(this);
