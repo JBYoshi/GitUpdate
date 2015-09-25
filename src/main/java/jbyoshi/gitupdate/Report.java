@@ -15,6 +15,8 @@
  */
 package jbyoshi.gitupdate;
 
+import com.google.common.collect.*;
+
 import jbyoshi.gitupdate.ui.*;
 
 public final class Report {
@@ -32,7 +34,7 @@ public final class Report {
 	}
 
 	public void newErrorChild(Throwable e) {
-		ReportDataUtils.printError(e, this);
+		new ErrorPrint(null, e, "").print(this);
 	}
 
 	public Report error() {
@@ -55,6 +57,52 @@ public final class Report {
 
 	void stateChanged() {
 		view.stateChanged(error, working, future, modified, done);
+	}
+
+	private static final class ErrorPrint {
+		private final String desc;
+		private final StackTraceElement[] stack;
+		private final Multimap<Integer, ErrorPrint> causes = HashMultimap.create();
+		private final int indexBreak;
+
+		private ErrorPrint(ErrorPrint parent, Throwable e, String desc) {
+			this.desc = desc + e;
+			stack = e.getStackTrace();
+			int i = 0;
+			if (parent != null) {
+				while (i < stack.length && i < parent.stack.length
+						&& parent.stack[parent.stack.length - i - 1].equals(stack[stack.length - i - 1])) {
+					i++;
+				}
+			}
+			indexBreak = i;
+
+			if (e.getCause() != null) {
+				addCause(new ErrorPrint(this, e.getCause(), "Caused by: "));
+			}
+			for (Throwable suppressed : e.getSuppressed()) {
+				addCause(new ErrorPrint(this, suppressed, "Suppressed: "));
+			}
+		}
+
+		private void addCause(ErrorPrint print) {
+			causes.put(print.indexBreak, print);
+		}
+
+		private void print(Report data) {
+			data = data.newChild(desc).error();
+			for (int i = indexBreak; i < stack.length; i++) {
+				data.newChild(stack[i - indexBreak].toString());
+				for (ErrorPrint child : causes.removeAll(stack.length - i + indexBreak - 1)) {
+					child.print(data);
+				}
+			}
+
+			// Print any remaining children
+			for (ErrorPrint child : causes.values()) {
+				child.print(data);
+			}
+		}
 	}
 
 }
