@@ -25,7 +25,7 @@ import jbyoshi.gitupdate.ui.*;
 
 final class Prompts extends CredentialsProvider {
 
-	private final Map<String, String> textPrompts = new HashMap<String, String>();
+	private final Map<String, Optional<String>> textPrompts = new HashMap<>();
 
 	static final Prompts INSTANCE = new Prompts();
 
@@ -72,26 +72,34 @@ final class Prompts extends CredentialsProvider {
 					if (item instanceof Username) {
 						prompt = "Username for " + uri;
 					}
-					String value = textPrompts.computeIfAbsent(prompt, (prompt0) -> {
+					Optional<String> value = textPrompts.computeIfAbsent(prompt, (prompt0) -> {
 						char[] val = UI.INSTANCE.promptPassword(prompt0);
 						if (val == null) {
-							return null;
+							return Optional.empty();
 						}
-						return new String(val);
+						return Optional.of(new String(val));
 					});
-					if (value == null) {
+					if (!value.isPresent()) {
 						return false;
 					}
-					((StringType) item).setValue(value);
+					((StringType) item).setValue(value.get());
 				}
 			} else if (item instanceof CharArrayType) {
 				String prompt = item.getPromptText();
 				if (item instanceof Password) {
 					prompt = "Password for " + uri;
 				}
-				((CharArrayType) item).setValueNoCopy(textPrompts
-						.computeIfAbsent(prompt, (prompt0) -> new String(UI.INSTANCE.promptPassword(prompt0)))
-						.toCharArray());
+				Optional<String> value = textPrompts.computeIfAbsent(prompt, (prompt0) -> {
+					char[] password = UI.INSTANCE.promptPassword(prompt0);
+					if (password == null) {
+						return Optional.empty();
+					}
+					return Optional.of(new String(password));
+				});
+				if (!value.isPresent()) {
+					return false;
+				}
+				((CharArrayType) item).setValueNoCopy(value.get().toCharArray());
 			} else {
 				return false;
 			}
