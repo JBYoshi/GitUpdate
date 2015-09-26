@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
 import java.util.*;
 
@@ -23,19 +23,18 @@ import org.eclipse.jgit.transport.*;
 
 import com.google.common.collect.*;
 
+import jbyoshi.gitupdate.*;
+
 public class Push extends SingleProcessor {
 
-	private int pushes;
-
 	@Override
-	public void process(Repository repo, Git git) throws Exception {
+	public void process(Repository repo, Git git, Report data) throws Exception {
 		Map<String, Ref> pushRefs = Utils.getLocalBranches(repo);
 		pushRefs = Maps.filterKeys(pushRefs, (k) -> new BranchConfig(repo.getConfig(), k).getRemote() != null);
 		Map<String, ObjectId> pushBranches = Maps.transformValues(pushRefs, Ref::getObjectId);
 		pushBranches = Maps.filterValues(pushBranches, (v) -> v != null);
 
 		if (!pushBranches.isEmpty()) {
-			System.out.println("\tPushing");
 			PushCommand push = git.push().setCredentialsProvider(Prompts.INSTANCE).setTimeout(5);
 			for (String branch : pushBranches.keySet()) {
 				push.add(Constants.R_HEADS + branch);
@@ -46,17 +45,11 @@ public class Push extends SingleProcessor {
 						String branchName = Utils.getShortBranch(update.getSrcRef());
 						ObjectId oldId = pushBranches.get(branchName);
 						String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
-						System.out.println("\t\t" + branchName + ": " + old + " -> " + update.getNewObjectId().name());
-						pushes++;
+						data.newChild(branchName + ": " + old + " -> " + update.getNewObjectId().name()).modified();
 					}
 				}
 			}
 		}
-	}
-
-	@Override
-	public void report() {
-		System.out.println(pushes + " branch" + (pushes == 1 ? "" : "es") + " pushed.");
 	}
 
 }

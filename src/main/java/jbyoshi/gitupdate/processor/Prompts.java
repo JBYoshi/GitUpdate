@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
-import java.awt.event.*;
 import java.util.*;
-
-import javax.swing.*;
 
 import org.eclipse.jgit.errors.*;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.CredentialItem.*;
+
+import jbyoshi.gitupdate.ui.*;
 
 final class Prompts extends CredentialsProvider {
 
@@ -59,28 +58,14 @@ final class Prompts extends CredentialsProvider {
 			if (item instanceof StringType) {
 				if (item instanceof Username && i < items.length - 1 && items[i + 1] instanceof Password) {
 					Password password = (Password) items[i + 1];
-					JTextField user = new JTextField();
-					JPasswordField pass = new JPasswordField();
-					JOptionPane pane = new JOptionPane(new Object[] { "Login for " + uri, user, pass },
-							JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
-					final JDialog dialog = pane.createDialog("Input");
-					pass.addActionListener((e) -> {
-						pane.setValue(JOptionPane.OK_OPTION);
-						dialog.setVisible(false);
-					});
-					dialog.addWindowListener(new WindowAdapter() {
-						@Override
-						public void windowOpened(WindowEvent e) {
-							user.requestFocusInWindow();
-						}
-					});
-					dialog.setVisible(true);
-					dialog.dispose();
-					if (!Integer.valueOf(JOptionPane.OK_OPTION).equals(pane.getValue())) {
+					// TODO cache this?
+					UsernamePasswordPair login = UI.INSTANCE.promptLogin("Login for " + uri);
+					if (login == null) {
 						return false;
 					}
-					((StringType) item).setValue(user.getText());
-					password.setValue(pass.getPassword());
+					((StringType) item).setValue(login.getUsername());
+					password.setValue(login.getPassword());
+					login.clobber();
 					i++;
 				} else {
 					String prompt = item.getPromptText();
@@ -88,7 +73,7 @@ final class Prompts extends CredentialsProvider {
 						prompt = "Username for " + uri;
 					}
 					String value = textPrompts.computeIfAbsent(prompt, (prompt0) -> {
-						char[] val = showPasswordDialog(prompt0);
+						char[] val = UI.INSTANCE.promptPassword(prompt0);
 						if (val == null) {
 							return null;
 						}
@@ -105,35 +90,13 @@ final class Prompts extends CredentialsProvider {
 					prompt = "Password for " + uri;
 				}
 				((CharArrayType) item).setValueNoCopy(textPrompts
-						.computeIfAbsent(prompt, (prompt0) -> new String(showPasswordDialog(prompt0))).toCharArray());
+						.computeIfAbsent(prompt, (prompt0) -> new String(UI.INSTANCE.promptPassword(prompt0)))
+						.toCharArray());
 			} else {
 				return false;
 			}
 		}
 		return true;
-	}
-
-	private static char[] showPasswordDialog(String prompt) {
-		JPasswordField pass = new JPasswordField();
-		JOptionPane pane = new JOptionPane(new Object[] { prompt, pass }, JOptionPane.QUESTION_MESSAGE,
-				JOptionPane.OK_CANCEL_OPTION);
-		final JDialog dialog = pane.createDialog("Input");
-		pass.addActionListener((e) -> {
-			pane.setValue(JOptionPane.OK_OPTION);
-			dialog.setVisible(false);
-		});
-		dialog.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowOpened(WindowEvent e) {
-				pass.requestFocusInWindow();
-			}
-		});
-		dialog.setVisible(true);
-		dialog.dispose();
-		if (!Integer.valueOf(JOptionPane.OK_OPTION).equals(pane.getValue())) {
-			return null;
-		}
-		return pass.getPassword();
 	}
 
 }

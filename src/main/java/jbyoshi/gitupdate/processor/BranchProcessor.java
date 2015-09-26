@@ -13,27 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
 import java.io.*;
+import java.util.*;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 
-public abstract class RemoteProcessor extends Processor<String> {
+import jbyoshi.gitupdate.*;
+
+public abstract class BranchProcessor extends Processor {
 
 	@Override
-	public final Iterable<String> getKeys(Repository repo) {
-		return repo.getRemoteNames();
+	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
+		Task me = root.newChild(getClass().getSimpleName());
+		for (Map.Entry<String, Ref> branch : Utils.getLocalBranches(repo).entrySet()) {
+			me.newChild(branch.getKey(), report -> {
+				try {
+					process(repo, git, branch.getKey(), branch.getValue(), report);
+				} catch (Exception e) {
+					report.newErrorChild(e);
+				}
+			});
+		}
 	}
 
-	@Override
-	public final void process(Repository repo, Git git, String remote) throws GitAPIException, IOException {
-		process(repo, git, remote, Constants.R_REMOTES + remote + "/");
-	}
-
-	public abstract void process(Repository repo, Git git, String remote, String fullRemote)
+	public abstract void process(Repository repo, Git git, String branch, Ref ref, Report report)
 			throws GitAPIException, IOException;
-
 }

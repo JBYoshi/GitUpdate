@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jbyoshi.gitupdate;
+package jbyoshi.gitupdate.processor;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.transport.*;
 
+import jbyoshi.gitupdate.*;
+
 public final class Fetch extends RemoteProcessor {
 
-	private int fetches;
-
 	@Override
-	public void process(Repository repo, Git git, String remote, String fullRemote) throws GitAPIException {
-		System.out.println("\tFetching remote " + remote);
+	public void process(Repository repo, Git git, String remote, String fullRemote, Report report)
+			throws GitAPIException {
 		FetchResult result = git.fetch().setRemoveDeletedRefs(true).setCredentialsProvider(Prompts.INSTANCE)
 				.setRemote(remote).call();
 		for (TrackingRefUpdate update : result.getTrackingRefUpdates()) {
 			if (update.getRemoteName().equals(Constants.R_HEADS + Constants.HEAD)) {
 				continue;
 			}
-			System.out.print("\t\t" + Utils.getShortBranch(update.getRemoteName()) + ": ");
+			StringBuilder text = new StringBuilder(Utils.getShortBranch(update.getRemoteName())).append(": ");
 			String oldId = update.getOldObjectId().name();
 			if (update.getOldObjectId().equals(ObjectId.zeroId())) {
 				oldId = "new branch";
@@ -42,14 +42,9 @@ public final class Fetch extends RemoteProcessor {
 			if (update.getNewObjectId().equals(ObjectId.zeroId())) {
 				newId = "deleted";
 			}
-			System.out.println(oldId + " -> " + newId);
-			fetches++;
+			text.append(oldId).append(" -> ").append(newId);
+			report.newChild(text.toString()).modified();
 		}
-	}
-
-	@Override
-	public void report() {
-		System.out.println(fetches + " branch" + (fetches == 1 ? "" : "es") + " fetched.");
 	}
 
 }

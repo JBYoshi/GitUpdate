@@ -19,53 +19,49 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-import javax.swing.*;
-
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.submodule.*;
 
 import com.google.common.collect.*;
 
+import jbyoshi.gitupdate.processor.*;
+
 public class GitUpdate {
 	private static final Set<File> updated = new HashSet<File>();
-	private static final ImmutableList<Processor<?>> processors = ImmutableList.of(new Fetch(), new FastForward(),
+	private static final ImmutableList<Processor> processors = ImmutableList.of(new Fetch(), new FastForward(),
 			new Push());
 
 	public static void main(String[] args) {
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		File gitDir = new File(System.getProperty("user.home"), "git");
 		if (!gitDir.exists()) {
-			System.err.println("No such directory: " + gitDir);
+			new Report(new Report(null, "Error").error(), "No such directory: " + gitDir).error();
 			return;
 		}
+		if (gitDir.list().length == 0) {
+			new Report(new Report(null, "Error").error(), "No folders in " + gitDir).error();
+			return;
+		}
+		Task root = new Task("GitUpdate");
 		for (File repoDir : gitDir.listFiles()) {
-			update(repoDir);
+			update(repoDir, root);
 		}
-		System.out.println("========================================");
-		System.out.println("Done.");
-		for (Processor<?> processor : processors) {
-			processor.report();
-		}
+		root.start();
 	}
 
-	public static void update(File repoDir) {
+	public static void update(File repoDir, Task root) {
 		try {
 			if (!repoDir.isDirectory()) {
 				return;
 			}
 			Repository repo = new RepositoryBuilder().setWorkTree(repoDir).setMustExist(true).build();
-			update(repo);
+			update(repo, root);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void update(Repository repo) {
+	public static void update(Repository repo, Task root) {
 		File dir = repo.getDirectory();
 		if (dir.getName().equals(".git")) {
 			dir = dir.getParentFile();
@@ -89,7 +85,7 @@ public class GitUpdate {
 				SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo);
 				try {
 					while (submodules.next()) {
-						update(submodules.getRepository());
+						update(submodules.getRepository(), root);
 					}
 				} finally {
 					submodules.release();
@@ -99,10 +95,14 @@ public class GitUpdate {
 			e.printStackTrace();
 		}
 
-		System.out.println("Updating " + dir.getName());
 		Git git = Git.wrap(repo);
-		for (Processor<?> processor : processors) {
-			processor.run(repo, git);
+		Task repoTask = root.newChild(dir.getName());
+		for (Processor processor : processors) {
+			try {
+				processor.registerTasks(repo, git, repoTask);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
