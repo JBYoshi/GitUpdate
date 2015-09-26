@@ -25,17 +25,17 @@ import com.google.common.collect.*;
 
 import jbyoshi.gitupdate.*;
 
-public class Push extends SingleProcessor {
+public class Push extends RemoteProcessor {
 
 	@Override
-	public void process(Repository repo, Git git, Report data) throws Exception {
+	public void process(Repository repo, Git git, String remote, String fullRemote, Report data) throws Exception {
 		Map<String, Ref> pushRefs = Utils.getLocalBranches(repo);
-		pushRefs = Maps.filterKeys(pushRefs, (k) -> new BranchConfig(repo.getConfig(), k).getRemote() != null);
+		pushRefs = Maps.filterKeys(pushRefs, (k) -> remote.equals(new BranchConfig(repo.getConfig(), k).getRemote()));
 		Map<String, ObjectId> pushBranches = Maps.transformValues(pushRefs, Ref::getObjectId);
 		pushBranches = Maps.filterValues(pushBranches, (v) -> v != null);
 
 		if (!pushBranches.isEmpty()) {
-			PushCommand push = git.push().setCredentialsProvider(Prompts.INSTANCE).setTimeout(5);
+			PushCommand push = git.push().setCredentialsProvider(Prompts.INSTANCE).setTimeout(5).setRemote(remote);
 			for (String branch : pushBranches.keySet()) {
 				push.add(Constants.R_HEADS + branch);
 			}

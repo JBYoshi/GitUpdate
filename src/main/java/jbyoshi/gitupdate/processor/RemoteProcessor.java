@@ -15,10 +15,7 @@
  */
 package jbyoshi.gitupdate.processor;
 
-import java.io.*;
-
 import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
 
 import jbyoshi.gitupdate.*;
@@ -40,6 +37,6 @@ public abstract class RemoteProcessor extends Processor {
 	}
 
 	public abstract void process(Repository repo, Git git, String remote, String fullRemote, Report report)
-			throws GitAPIException, IOException;
+			throws Exception;
 
 }
