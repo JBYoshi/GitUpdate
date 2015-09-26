@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
-groupId = 'jbyoshi'
+group = 'jbyoshi'
 archivesBaseName = 'gitupdate'
 version = '1.2-SNAPSHOT'
 
