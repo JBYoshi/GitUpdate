@@ -25,28 +25,66 @@ import com.google.common.collect.*;
 
 import jbyoshi.gitupdate.*;
 
-public class Push extends RemoteProcessor {
+public class Push extends Processor {
 
 	@Override
-	public void process(Repository repo, Git git, String remote, String fullRemote, Report data) throws Exception {
-		Map<String, Ref> pushRefs = Utils.getLocalBranches(repo);
-		pushRefs = Maps.filterKeys(pushRefs, (k) -> remote.equals(new BranchConfig(repo.getConfig(), k).getRemote()));
-		Map<String, ObjectId> pushBranches = Maps.transformValues(pushRefs, Ref::getObjectId);
-		pushBranches = Maps.filterValues(pushBranches, (v) -> v != null);
+	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
+		Task me = root.newChild(getClass().getSimpleName());
+		// Group the branches by their remotes.
+		Multimap<String, String> branchList = HashMultimap.create();
+		for (String branch : Utils.getLocalBranches(repo).keySet()) {
+			branchList.put(new BranchConfig(repo.getConfig(), branch).getRemote(), branch);
+		}
+		for (Map.Entry<String, Collection<String>> remote : branchList.asMap().entrySet()) {
+			me.newChild(remote.getKey(), report -> {
+				try {
+					process(repo, git, remote.getKey(), Constants.R_REMOTES + remote.getKey() + "/", remote.getValue(),
+							report);
+				} catch (Exception e) {
+					report.newErrorChild(e);
+				}
+			});
+		}
+	}
 
-		if (!pushBranches.isEmpty()) {
-			PushCommand push = git.push().setCredentialsProvider(Prompts.INSTANCE).setTimeout(5).setRemote(remote);
-			for (String branch : pushBranches.keySet()) {
-				push.add(Constants.R_HEADS + branch);
+	private static void process(Repository repo, Git git, String remote, String fullRemote, Collection<String> branches,
+			Report report) throws Exception {
+		// Figure out if anything needs to be pushed.
+		boolean canPush = false;
+		for (Iterator<String> it = branches.iterator(); it.hasNext();) {
+			String branch = it.next();
+			BranchConfig config = new BranchConfig(repo.getConfig(), branch);
+			ObjectId target = repo.getRef(branch).getObjectId();
+
+			Ref remoteRef = repo.getRef(config.getRemoteTrackingBranch());
+			if (remoteRef == null || !target.equals(remoteRef.getObjectId())) {
+				canPush = true;
+				System.out.println("Can push " + repo.getWorkTree().getName() + " " + branch + " -> "
+						+ config.getRemoteTrackingBranch());
+				break;
+			} else {
+				System.out.println("Cannot push " + repo.getWorkTree().getName() + " " + branch + " -> "
+						+ config.getRemoteTrackingBranch());
 			}
-			for (PushResult result : push.call()) {
-				for (RemoteRefUpdate update : result.getRemoteUpdates()) {
-					if (update.getStatus() == RemoteRefUpdate.Status.OK) {
-						String branchName = Utils.getShortBranch(update.getSrcRef());
-						ObjectId oldId = pushBranches.get(branchName);
-						String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
-						data.newChild(branchName + ": " + old + " -> " + update.getNewObjectId().name()).modified();
-					}
+		}
+
+		if (!canPush) {
+			return;
+		}
+
+		PushCommand push = git.push().setCredentialsProvider(Prompts.INSTANCE).setTimeout(5)
+				.setRemote(remote);
+		for (String branch : branches) {
+			push.add(Constants.R_HEADS + branch);
+		}
+		for (PushResult result : push.call()) {
+			for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+				if (update.getStatus() == RemoteRefUpdate.Status.OK) {
+					String branchName = Utils.getShortBranch(update.getSrcRef());
+					ObjectId oldId = update.getExpectedOldObjectId();
+					String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
+					report.newChild(branchName + ": " + old + " -> " + update.getNewObjectId().name())
+					.modified();
 				}
 			}
 		}
