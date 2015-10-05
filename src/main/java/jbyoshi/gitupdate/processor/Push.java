@@ -33,7 +33,10 @@ public class Push extends Processor {
 		// Group the branches by their remotes.
 		Multimap<String, String> branchList = HashMultimap.create();
 		for (String branch : Utils.getLocalBranches(repo).keySet()) {
-			branchList.put(new BranchConfig(repo.getConfig(), branch).getRemote(), branch);
+			String remote = new BranchConfig(repo.getConfig(), branch).getRemote();
+			if (remote != null) {
+				branchList.put(remote, branch);
+			}
 		}
 		for (Map.Entry<String, Collection<String>> remote : branchList.asMap().entrySet()) {
 			me.newChild(remote.getKey(), report -> {
