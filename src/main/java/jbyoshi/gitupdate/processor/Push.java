@@ -50,6 +50,7 @@ public class Push extends Processor {
 	private static void process(Repository repo, Git git, String remote, String fullRemote, Collection<String> branches,
 			Report report) throws Exception {
 		// Figure out if anything needs to be pushed.
+		Map<String, ObjectId> oldIds = new HashMap<>();
 		boolean canPush = false;
 		for (Iterator<String> it = branches.iterator(); it.hasNext();) {
 			String branch = it.next();
@@ -59,13 +60,8 @@ public class Push extends Processor {
 			Ref remoteRef = repo.getRef(config.getRemoteTrackingBranch());
 			if (remoteRef == null || !target.equals(remoteRef.getObjectId())) {
 				canPush = true;
-				System.out.println("Can push " + repo.getWorkTree().getName() + " " + branch + " -> "
-						+ config.getRemoteTrackingBranch());
-				break;
-			} else {
-				System.out.println("Cannot push " + repo.getWorkTree().getName() + " " + branch + " -> "
-						+ config.getRemoteTrackingBranch());
 			}
+			oldIds.put(branch, remoteRef == null ? ObjectId.zeroId() : remoteRef.getObjectId());
 		}
 
 		if (!canPush) {
@@ -81,7 +77,7 @@ public class Push extends Processor {
 			for (RemoteRefUpdate update : result.getRemoteUpdates()) {
 				if (update.getStatus() == RemoteRefUpdate.Status.OK) {
 					String branchName = Utils.getShortBranch(update.getSrcRef());
-					ObjectId oldId = update.getExpectedOldObjectId();
+					ObjectId oldId = oldIds.get(branchName);
 					String old = oldId.equals(ObjectId.zeroId()) ? "new branch" : oldId.name();
 					report.newChild(branchName + ": " + old + " -> " + update.getNewObjectId().name())
 					.modified();
