@@ -15,6 +15,8 @@
  */
 package jbyoshi.gitupdate.processor;
 
+import java.io.*;
+
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.*;
@@ -26,7 +28,7 @@ public final class Fetch extends RemoteProcessor {
 
 	@Override
 	public void process(Repository repo, Git git, String remote, String fullRemote, Report report)
-			throws GitAPIException {
+			throws GitAPIException, IOException {
 		FetchResult result = git.fetch().setRemoveDeletedRefs(true).setCredentialsProvider(Prompts.INSTANCE)
 				.setRemote(remote).call();
 		for (TrackingRefUpdate update : result.getTrackingRefUpdates()) {
@@ -41,6 +43,13 @@ public final class Fetch extends RemoteProcessor {
 			String newId = update.getNewObjectId().name();
 			if (update.getNewObjectId().equals(ObjectId.zeroId())) {
 				newId = "deleted";
+				for (String branch : Utils.getLocalBranches(repo).keySet()) {
+					if (update.getLocalName()
+							.equals(new BranchConfig(repo.getConfig(), branch).getRemoteTrackingBranch())) {
+						repo.getConfig().unset("branches", branch, "remote");
+						repo.getConfig().save();
+					}
+				}
 			}
 			text.append(oldId).append(" -> ").append(newId);
 			report.newChild(text.toString()).modified();
