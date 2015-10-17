@@ -54,8 +54,9 @@ public class GitUpdate {
 			if (!repoDir.isDirectory()) {
 				return;
 			}
-			Repository repo = new RepositoryBuilder().setWorkTree(repoDir).setMustExist(true).build();
-			update(repo, root);
+			try (Repository repo = new RepositoryBuilder().setWorkTree(repoDir).setMustExist(true).build()) {
+				update(repo, root);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -82,26 +83,24 @@ public class GitUpdate {
 
 		try {
 			if (SubmoduleWalk.containsGitModulesFile(repo)) {
-				SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo);
-				try {
+				try (SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo)) {
 					while (submodules.next()) {
 						update(submodules.getRepository(), root);
 					}
-				} finally {
-					submodules.release();
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		Git git = Git.wrap(repo);
-		Task repoTask = root.newChild(dir.getName());
-		for (Processor processor : processors) {
-			try {
-				processor.registerTasks(repo, git, repoTask);
-			} catch (Exception e) {
-				e.printStackTrace();
+		try (Git git = Git.wrap(repo)) {
+			Task repoTask = root.newChild(dir.getName());
+			for (Processor processor : processors) {
+				try {
+					processor.registerTasks(repo, git, repoTask);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

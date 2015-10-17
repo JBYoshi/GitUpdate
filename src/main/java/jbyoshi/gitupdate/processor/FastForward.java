@@ -44,42 +44,41 @@ public class FastForward extends BranchProcessor {
 		}
 		target = repo.peel(target);
 		if (!ref.equals(repo.getRef(Constants.HEAD).getTarget())) {
-			RevWalk revWalk = new RevWalk(repo);
-
-			ObjectId targetId = target.getPeeledObjectId();
-			if (targetId == null) {
-				targetId = target.getObjectId();
-			}
-
-			RevCommit targetCommit = revWalk.lookupCommit(targetId);
-			ObjectId sourceId = ref.getObjectId();
-			RevCommit sourceCommit = revWalk.lookupCommit(sourceId);
-			if (revWalk.isMergedInto(sourceCommit, targetCommit)) {
-				RefUpdate refUpdate = repo.updateRef(ref.getName());
-				refUpdate.setNewObjectId(targetCommit);
-				refUpdate.setRefLogMessage("Fast forward", false);
-				refUpdate.setExpectedOldObjectId(sourceId);
-				Result rc = refUpdate.update();
-				switch (rc) {
-				case NEW:
-				case FAST_FORWARD:
-					report.newChild(ref.getName() + " -> " + target.getName()).modified();
-					return true;
-				case REJECTED:
-				case LOCK_FAILURE:
-					report.newErrorChild(
-							new ConcurrentRefUpdateException(JGitText.get().couldNotLockHEAD,
-									refUpdate.getRef(), rc));
-					break;
-				case NO_CHANGE:
-					break;
-				default:
-					report.newErrorChild(new JGitInternalException(MessageFormat
-							.format(JGitText.get().updatingRefFailed, ref.getName(), targetId.toString(), rc)));
-					break;
+			try (RevWalk revWalk = new RevWalk(repo)) {
+				ObjectId targetId = target.getPeeledObjectId();
+				if (targetId == null) {
+					targetId = target.getObjectId();
 				}
+
+				RevCommit targetCommit = revWalk.lookupCommit(targetId);
+				ObjectId sourceId = ref.getObjectId();
+				RevCommit sourceCommit = revWalk.lookupCommit(sourceId);
+				if (revWalk.isMergedInto(sourceCommit, targetCommit)) {
+					RefUpdate refUpdate = repo.updateRef(ref.getName());
+					refUpdate.setNewObjectId(targetCommit);
+					refUpdate.setRefLogMessage("Fast forward", false);
+					refUpdate.setExpectedOldObjectId(sourceId);
+					Result rc = refUpdate.update();
+					switch (rc) {
+					case NEW:
+					case FAST_FORWARD:
+						report.newChild(ref.getName() + " -> " + target.getName()).modified();
+						return true;
+					case REJECTED:
+					case LOCK_FAILURE:
+						report.newErrorChild(new ConcurrentRefUpdateException(JGitText.get().couldNotLockHEAD,
+								refUpdate.getRef(), rc));
+						break;
+					case NO_CHANGE:
+						break;
+					default:
+						report.newErrorChild(new JGitInternalException(MessageFormat
+								.format(JGitText.get().updatingRefFailed, ref.getName(), targetId.toString(), rc)));
+						break;
+					}
+				}
+				return false;
 			}
-			return false;
 		}
 		try {
 			MergeResult result = Git.wrap(repo).merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY)
