@@ -21,7 +21,7 @@ import java.util.function.*;
 public final class Task {
 	private final Consumer<Report> code;
 	private final Set<Task> children = new LinkedHashSet<>();
-	private final Report report;
+	final Report report;
 
 	Task(String text) {
 		this(null, text, report -> {
