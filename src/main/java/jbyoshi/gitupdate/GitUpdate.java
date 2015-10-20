@@ -33,20 +33,30 @@ public class GitUpdate {
 			new Rebase(), new Push());
 
 	public static void main(String[] args) {
-		File gitDir = new File(System.getProperty("user.home"), "git");
-		if (!gitDir.exists()) {
-			new Report(new Report(null, "Error").error(), "No such directory: " + gitDir).error();
-			return;
+		Report rootReport = null;
+		try {
+			File gitDir = new File(System.getProperty("user.home"), "git");
+			if (!gitDir.exists()) {
+				throw new FileNotFoundException(gitDir.toString());
+			}
+			if (!gitDir.isDirectory()) {
+				throw new IOException("Not a directory: " + gitDir);
+			}
+			if (gitDir.list().length == 0) {
+				throw new IOException("No files in " + gitDir);
+			}
+			Task root = new Task("GitUpdate");
+			rootReport = root.report;
+			for (File repoDir : gitDir.listFiles()) {
+				update(repoDir, root);
+			}
+			root.start();
+		} catch (Throwable t) {
+			if (rootReport == null) {
+				rootReport = new Report(null, "Error");
+			}
+			rootReport.newErrorChild(t);
 		}
-		if (gitDir.list().length == 0) {
-			new Report(new Report(null, "Error").error(), "No folders in " + gitDir).error();
-			return;
-		}
-		Task root = new Task("GitUpdate");
-		for (File repoDir : gitDir.listFiles()) {
-			update(repoDir, root);
-		}
-		root.start();
 	}
 
 	public static void update(File repoDir, Task root) {

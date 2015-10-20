@@ -21,7 +21,7 @@ import java.util.function.*;
 public final class Task {
 	private final Consumer<Report> code;
 	private final Set<Task> children = new LinkedHashSet<>();
-	private final Report report;
+	final Report report;
 
 	Task(String text) {
 		this(null, text, report -> {
@@ -30,6 +30,8 @@ public final class Task {
 
 	private Task(Report parentReport, String text, Consumer<Report> code) {
 		this.report = new Report(parentReport, text);
+		this.report.future = true;
+		this.report.stateChanged();
 		this.code = code;
 	}
 
@@ -45,25 +47,12 @@ public final class Task {
 	}
 
 	void start() {
-		pre();
-		go();
-	}
-
-	private void pre() {
-		report.future = true;
-		report.stateChanged();
-		for (Task child : children) {
-			child.pre();
-		}
-	}
-
-	private void go() {
 		report.future = false;
 		report.working = true;
 		report.stateChanged();
 		code.accept(report);
 		for (Task child : children) {
-			child.go();
+			child.start();
 		}
 		report.working = false;
 		report.done = true;
