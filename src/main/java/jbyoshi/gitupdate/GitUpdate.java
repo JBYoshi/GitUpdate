@@ -16,7 +16,6 @@
 package jbyoshi.gitupdate;
 
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 
 import org.eclipse.jgit.api.*;
@@ -28,7 +27,7 @@ import com.google.common.collect.*;
 import jbyoshi.gitupdate.processor.*;
 
 public class GitUpdate {
-	private static final Set<File> updated = new HashSet<File>();
+	private static final Set<File> updated = new HashSet<>();
 	private static final ImmutableList<Processor> processors = ImmutableList.of(new Fetch(), new FastForward(),
 			new Push());
 
