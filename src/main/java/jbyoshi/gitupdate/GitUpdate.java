@@ -77,15 +77,10 @@ public class GitUpdate {
 		if (dir.getName().equals(".git")) {
 			dir = dir.getParentFile();
 		}
-		{
-			Path path = dir.toPath();
-			if (Files.isSymbolicLink(path)) {
-				try {
-					dir = Files.readSymbolicLink(path).toFile();
-				} catch (IOException e) {
-					// Ignore
-				}
-			}
+		try {
+			dir = dir.toPath().toRealPath().toFile();
+		} catch (IOException e) {
+			dir = dir.toPath().normalize().toFile();
 		}
 		if (!updated.add(dir)) {
 			return;
