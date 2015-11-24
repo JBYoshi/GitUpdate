@@ -19,6 +19,7 @@ import java.io.*;
 import java.util.*;
 
 import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.errors.*;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.submodule.*;
 
@@ -66,6 +67,18 @@ public class GitUpdate {
 			try (Repository repo = new RepositoryBuilder().setWorkTree(repoDir).setMustExist(true).build()) {
 				update(repo, root);
 			}
+		} catch (RepositoryNotFoundException e) {
+			if (repoDir.getName().equals(Constants.DOT_GIT)) {
+				repoDir = repoDir.getParentFile();
+			}
+			try {
+				repoDir = repoDir.toPath().toRealPath().toFile();
+			} catch (IOException e1) {
+				repoDir = repoDir.toPath().normalize().toFile();
+			}
+			if (updated.add(repoDir)) {
+				root.report.newChild(repoDir.getName() + " - not a Git repository");
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -73,7 +86,7 @@ public class GitUpdate {
 
 	public static void update(Repository repo, Task root) {
 		File dir = repo.getDirectory();
-		if (dir.getName().equals(".git")) {
+		if (dir.getName().equals(Constants.DOT_GIT)) {
 			dir = dir.getParentFile();
 		}
 		try {
