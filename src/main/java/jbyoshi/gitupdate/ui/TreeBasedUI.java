@@ -142,9 +142,11 @@ public final class TreeBasedUI implements UI {
 		@Override
 		public ReportView newChild(String text) {
 			GUINodeView child = new GUINodeView(text);
-			model.insertNodeInto(child, this, getChildCount());
-			model.nodeChanged(this);
-			tree.expandPath(new TreePath(root.getPath()));
+			EventQueue.invokeLater(() -> {
+				model.insertNodeInto(child, this, getChildCount());
+				model.nodeChanged(this);
+				tree.expandPath(new TreePath(root.getPath()));
+			});
 			return child;
 		}
 
@@ -177,7 +179,7 @@ public final class TreeBasedUI implements UI {
 			} else {
 				icon = ICON_PLAIN;
 			}
-			model.nodeChanged(this);
+			EventQueue.invokeLater(() -> model.nodeChanged(this));
 		}
 	}
 
