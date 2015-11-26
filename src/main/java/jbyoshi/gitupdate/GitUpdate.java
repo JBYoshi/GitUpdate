@@ -50,12 +50,41 @@ public class GitUpdate {
 			for (File repoDir : gitDir.listFiles()) {
 				update(repoDir, root);
 			}
+			putAboutText(root.report);
 			root.start();
 		} catch (Throwable t) {
 			if (rootReport == null) {
 				rootReport = new Report(null, "Error");
 			}
 			rootReport.newErrorChild(t);
+		}
+	}
+
+	private static void putAboutText(Report report) {
+		report = report.newChild("Licenses");
+		for (String name : Arrays.asList("", "JGit", "Guava", "slf4j", "JSch", "JavaEWAH", "Apache_HTTPClient",
+				"JDT_Annotations_for_Enhanced_Null_Analysis", "Apache_HTTPCore", "Apache_Commons_Logging",
+				"Apache_Commons_Codec")) {
+			StringBuilder sb = new StringBuilder();
+			String file = name == "" ? "/LICENSE.txt"
+ : "/licenses/" + name.toLowerCase() + "-LICENSE.txt";
+			if (name == "" && GitUpdate.class.getResource("/LICENSE.txt") == null) {
+				report.newChild("GitUpdate").newChild("Could not locate license in development mode!").error();
+				continue;
+			}
+			try (Reader reader = new InputStreamReader(GitUpdate.class.getResourceAsStream(file))) {
+				char[] cbuf = new char[1024];
+				int read;
+				while ((read = reader.read(cbuf)) > 0) {
+					sb.append(cbuf, 0, read);
+				}
+			} catch (IOException e) {
+				throw new AssertionError(e);
+			}
+			Report out = report.newChild(name == "" ? "GitUpdate" : name.replace("_", " "));
+			for (String part : sb.toString().split("\n")) {
+				out.newChild(part);
+			}
 		}
 	}
 
