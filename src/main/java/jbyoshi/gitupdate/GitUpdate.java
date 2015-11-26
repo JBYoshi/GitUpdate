@@ -16,10 +16,10 @@
 package jbyoshi.gitupdate;
 
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 
 import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.errors.*;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.submodule.*;
 
@@ -28,7 +28,7 @@ import com.google.common.collect.*;
 import jbyoshi.gitupdate.processor.*;
 
 public class GitUpdate {
-	private static final Set<File> updated = new HashSet<File>();
+	private static final Set<File> updated = new HashSet<>();
 	private static final ImmutableList<Processor> processors = ImmutableList.of(new Fetch(), new FastForward(),
 			new Rebase(), new Push());
 
@@ -50,12 +50,41 @@ public class GitUpdate {
 			for (File repoDir : gitDir.listFiles()) {
 				update(repoDir, root);
 			}
+			putAboutText(root.report);
 			root.start();
 		} catch (Throwable t) {
 			if (rootReport == null) {
 				rootReport = new Report(null, "Error");
 			}
 			rootReport.newErrorChild(t);
+		}
+	}
+
+	private static void putAboutText(Report report) {
+		report = report.newChild("Licenses");
+		for (String name : Arrays.asList("", "JGit", "Guava", "slf4j", "JSch", "JavaEWAH", "Apache_HTTPClient",
+				"JDT_Annotations_for_Enhanced_Null_Analysis", "Apache_HTTPCore", "Apache_Commons_Logging",
+				"Apache_Commons_Codec")) {
+			StringBuilder sb = new StringBuilder();
+			String file = name == "" ? "/LICENSE.txt"
+ : "/licenses/" + name.toLowerCase() + "-LICENSE.txt";
+			if (name == "" && GitUpdate.class.getResource("/LICENSE.txt") == null) {
+				report.newChild("GitUpdate").newChild("Could not locate license in development mode!").error();
+				continue;
+			}
+			try (Reader reader = new InputStreamReader(GitUpdate.class.getResourceAsStream(file))) {
+				char[] cbuf = new char[1024];
+				int read;
+				while ((read = reader.read(cbuf)) > 0) {
+					sb.append(cbuf, 0, read);
+				}
+			} catch (IOException e) {
+				throw new AssertionError(e);
+			}
+			Report out = report.newChild(name == "" ? "GitUpdate" : name.replace("_", " "));
+			for (String part : sb.toString().split("\n")) {
+				out.newChild(part);
+			}
 		}
 	}
 
@@ -67,6 +96,18 @@ public class GitUpdate {
 			try (Repository repo = new RepositoryBuilder().setWorkTree(repoDir).setMustExist(true).build()) {
 				update(repo, root);
 			}
+		} catch (RepositoryNotFoundException e) {
+			if (repoDir.getName().equals(Constants.DOT_GIT)) {
+				repoDir = repoDir.getParentFile();
+			}
+			try {
+				repoDir = repoDir.toPath().toRealPath().toFile();
+			} catch (IOException e1) {
+				repoDir = repoDir.toPath().normalize().toFile();
+			}
+			if (updated.add(repoDir)) {
+				root.report.newChild(repoDir.getName() + " - not a Git repository");
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -74,18 +115,13 @@ public class GitUpdate {
 
 	public static void update(Repository repo, Task root) {
 		File dir = repo.getDirectory();
-		if (dir.getName().equals(".git")) {
+		if (dir.getName().equals(Constants.DOT_GIT)) {
 			dir = dir.getParentFile();
 		}
-		{
-			Path path = dir.toPath();
-			if (Files.isSymbolicLink(path)) {
-				try {
-					dir = Files.readSymbolicLink(path).toFile();
-				} catch (IOException e) {
-					// Ignore
-				}
-			}
+		try {
+			dir = dir.toPath().toRealPath().toFile();
+		} catch (IOException e) {
+			dir = dir.toPath().normalize().toFile();
 		}
 		if (!updated.add(dir)) {
 			return;

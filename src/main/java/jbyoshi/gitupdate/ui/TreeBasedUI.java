@@ -46,7 +46,9 @@ public final class TreeBasedUI implements UI {
 			public void stateChanged(boolean error, boolean working, boolean future, boolean modified, boolean done) {
 				super.stateChanged(error, working, future, modified, done);
 				if (done) {
-					if (modified) {
+					if (error) {
+						frame.setTitle("GitUpdate - Errored");
+					} else if (modified) {
 						frame.setTitle("GitUpdate - Updated");
 					} else {
 						frame.setTitle("GitUpdate - Done");
@@ -140,9 +142,11 @@ public final class TreeBasedUI implements UI {
 		@Override
 		public ReportView newChild(String text) {
 			GUINodeView child = new GUINodeView(text);
-			model.insertNodeInto(child, this, getChildCount());
-			model.nodeChanged(this);
-			tree.expandPath(new TreePath(root.getPath()));
+			EventQueue.invokeLater(() -> {
+				model.insertNodeInto(child, this, getChildCount());
+				model.nodeChanged(this);
+				tree.expandPath(new TreePath(root.getPath()));
+			});
 			return child;
 		}
 
@@ -175,7 +179,7 @@ public final class TreeBasedUI implements UI {
 			} else {
 				icon = ICON_PLAIN;
 			}
-			model.nodeChanged(this);
+			EventQueue.invokeLater(() -> model.nodeChanged(this));
 		}
 	}
 
