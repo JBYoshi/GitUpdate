@@ -1,20 +1,44 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-
-group = 'jbyoshi'
-archivesBaseName = 'gitupdate'
-version = '1.1.1'
-
 buildscript {
-	repositories {
-		mavenCentral()
-	}
-	dependencies {
-		classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.10.0'
-	}
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.10.0'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'eclipse'
+    id 'idea'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '1.2.2'
 }
 apply plugin: 'license'
+
+// Project properties
+group = 'jbyoshi'
+archivesBaseName = 'gitupdate'
+version = '1.2-SNAPSHOT'
+
+// Java 1.8
+sourceCompatibility = targetCompatibility = '1.8'
+
+// Project dependencies
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url 'https://repo.eclipse.org/content/groups/releases/'
+    }
+}
+dependencies {
+    compile "org.eclipse.jgit:org.eclipse.jgit:4.1.0.201509280440-r"
+    compile "com.google.guava:guava:18.0"
+    runtime "org.slf4j:slf4j-simple:1.7.10" // Required by JGit
+}
+
+// License
 defaultTasks 'licenseFormat', 'build'
 license {
     header file('gradle/HEADER.txt')
@@ -32,22 +56,12 @@ processResources {
     from 'LICENSE.txt'
 }
 
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        url 'https://repo.eclipse.org/content/groups/releases/'
-    }
-}
-dependencies {
-    compile "org.eclipse.jgit:org.eclipse.jgit:4.1.0.201509280440-r"
-    compile "com.google.guava:guava:18.0"
-    runtime "org.slf4j:slf4j-simple:1.7.10" // Required by JGit
-}
-
-apply plugin: 'application'
+// Application+Shadow
 mainClassName = 'jbyoshi.gitupdate.GitUpdate'
-jar{manifest{attributes('Main-Class': mainClassName)}}
+shadowJar {
+    dependencies {
+        exclude(dependency('org.eclipse.jdt:org.eclipse.jdt.annotation'))
+    }
+    classifier = ''
+}
+build.dependsOn shadowJar
