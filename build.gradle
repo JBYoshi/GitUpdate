@@ -33,7 +33,7 @@ repositories {
     }
 }
 dependencies {
-    compile "org.eclipse.jgit:org.eclipse.jgit:4.1.0.201509280440-r"
+    compile "org.eclipse.jgit:org.eclipse.jgit:4.2.0.201511101648-m1"
     compile "com.google.guava:guava:18.0"
     runtime "org.slf4j:slf4j-simple:1.7.10" // Required by JGit
 }
