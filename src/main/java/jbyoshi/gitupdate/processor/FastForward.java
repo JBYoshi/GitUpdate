@@ -93,12 +93,6 @@ public class FastForward extends BranchProcessor {
 			}
 		} catch (NoHeadException e) {
 			// Ignore
-		} catch (ConcurrentRefUpdateException e) {
-			System.err.println(e);
-		} catch (CheckoutConflictException e) {
-			System.err.println(e);
-		} catch (WrongRepositoryStateException e) {
-			System.err.println(e);
 		}
 		return false;
 	}
