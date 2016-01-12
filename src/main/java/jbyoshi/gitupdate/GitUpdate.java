@@ -68,7 +68,7 @@ public class GitUpdate {
 				"Apache_Commons_Codec")) {
 			StringBuilder sb = new StringBuilder();
 			String file = name == "" ? "/LICENSE.txt"
-					 : "/licenses/" + name.toLowerCase() + "-LICENSE.txt";
+					: "/licenses/" + name.toLowerCase() + "-LICENSE.txt";
 			if (name == "" && GitUpdate.class.getResource("/LICENSE.txt") == null) {
 				report.newChild("GitUpdate").newChild("Could not locate license in development mode!").error();
 				continue;
@@ -128,16 +128,14 @@ public class GitUpdate {
 			return;
 		}
 
-		Task repoTask = root.newChild(dir.getName());
+		List<String> failures = new ArrayList<>();
 
 		try {
 			if (SubmoduleWalk.containsGitModulesFile(repo)) {
 				try (SubmoduleWalk submodules = SubmoduleWalk.forIndex(repo)) {
 					while (submodules.next()) {
 						if (submodules.getRepository() == null) {
-							repoTask.report
-									.newChild("Submodule " + submodules.getDirectory().getName() + " - does not exist")
-									.error();
+							failures.add("Submodule " + submodules.getDirectory().getName() + " - does not exist");
 						} else {
 							update(submodules.getRepository(), root);
 						}
@@ -146,6 +144,11 @@ public class GitUpdate {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+
+		Task repoTask = root.newChild(dir.getName());
+		for (String error : failures) {
+			repoTask.report.newChild(error).error();
 		}
 
 		try (Git git = Git.wrap(repo)) {
