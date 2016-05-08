@@ -41,8 +41,7 @@ public final class Push extends Processor {
 		for (Map.Entry<String, Collection<String>> remote : branchList.asMap().entrySet()) {
 			me.newChild(remote.getKey(), report -> {
 				try {
-					process(repo, git, remote.getKey(), Constants.R_REMOTES + remote.getKey() + "/", remote.getValue(),
-							report);
+					process(repo, git, remote.getKey(), remote.getValue(), report);
 				} catch (Exception e) {
 					report.newErrorChild(e);
 				}
@@ -50,13 +49,12 @@ public final class Push extends Processor {
 		}
 	}
 
-	private static void process(Repository repo, Git git, String remote, String fullRemote, Collection<String> branches,
+	private static void process(Repository repo, Git git, String remote, Collection<String> branches,
 			Report report) throws Exception {
 		// Figure out if anything needs to be pushed.
 		Map<String, ObjectId> oldIds = new HashMap<>();
 		boolean canPush = false;
-		for (Iterator<String> it = branches.iterator(); it.hasNext();) {
-			String branch = it.next();
+		for (String branch : branches) {
 			BranchConfig config = new BranchConfig(repo.getConfig(), branch);
 			ObjectId target = repo.getRef(branch).getObjectId();
 
