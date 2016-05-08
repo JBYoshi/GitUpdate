@@ -42,6 +42,9 @@ public final class Rebase extends BranchProcessor {
 				break;
 			case UP_TO_DATE:
 				break;
+			case OK:
+				Push.forcePush(repo, branch);
+				//$FALL-THROUGH$
 			default:
 				Report details = report.newChild(result.getStatus().toString());
 				if (result.getStatus().isSuccessful()) {
