@@ -25,7 +25,7 @@ import com.google.common.collect.*;
 
 import jbyoshi.gitupdate.*;
 
-public class Push extends Processor {
+public final class Push extends Processor {
 
 	@Override
 	public void registerTasks(Repository repo, Git git, Task root) throws Exception {
