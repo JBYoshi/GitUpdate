@@ -34,6 +34,19 @@ public final class Report {
 	}
 
 	public void newErrorChild(Throwable e) {
+		try {
+			if (e instanceof org.eclipse.jgit.api.errors.CheckoutConflictException
+					|| e instanceof org.eclipse.jgit.errors.CheckoutConflictException) {
+				String[] lines = e.getMessage().split("\n");
+				Report report = newChild(lines[0]);
+				for (int i = 1; i < lines.length; i++) {
+					report.newChild(lines[i]).error();
+				}
+				return;
+			}
+		} catch (Throwable e1) {
+			e.addSuppressed(e1);
+		}
 		new ErrorPrint(null, e, "").print(this);
 	}
 

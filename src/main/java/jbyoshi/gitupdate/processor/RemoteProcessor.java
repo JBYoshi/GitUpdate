@@ -20,7 +20,7 @@ import org.eclipse.jgit.lib.*;
 
 import jbyoshi.gitupdate.*;
 
-public abstract class RemoteProcessor extends Processor {
+abstract class RemoteProcessor extends Processor {
 
 	@Override
 	public void registerTasks(Repository repo, Git git, Task root) throws Exception {

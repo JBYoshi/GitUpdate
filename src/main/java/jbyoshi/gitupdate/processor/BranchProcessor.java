@@ -24,7 +24,7 @@ import org.eclipse.jgit.lib.*;
 
 import jbyoshi.gitupdate.*;
 
-public abstract class BranchProcessor extends Processor {
+abstract class BranchProcessor extends Processor {
 
 	@Override
 	public void registerTasks(Repository repo, Git git, Task root) throws Exception {

@@ -20,7 +20,7 @@ import java.util.*;
 public final class UsernamePasswordPair {
 	private final String username;
 	private final char[] password;
-	public UsernamePasswordPair(String username, char[] password) {
+	UsernamePasswordPair(String username, char[] password) {
 		this.username = username;
 		this.password = password;
 	}

@@ -16,7 +16,7 @@
 package jbyoshi.gitupdate.ui;
 
 public interface ReportView {
-	public ReportView newChild(String text);
+	ReportView newChild(String text);
 
-	public void stateChanged(boolean error, boolean working, boolean future, boolean modified, boolean done);
+	void stateChanged(boolean error, boolean working, boolean future, boolean modified, boolean done);
 }

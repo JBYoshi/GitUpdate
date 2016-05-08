@@ -17,7 +17,7 @@ package jbyoshi.gitupdate.ui;
 
 import java.io.*;
 
-public final class ConsoleUI implements UI {
+final class ConsoleUI implements UI {
 	private final Console console = System.console();
 	private static final ReportView root = new ReportView() {
 		@Override

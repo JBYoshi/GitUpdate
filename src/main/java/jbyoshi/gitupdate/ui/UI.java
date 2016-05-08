@@ -16,12 +16,12 @@
 package jbyoshi.gitupdate.ui;
 
 public interface UI {
-	public static final UI INSTANCE = System.console() == null ? new TreeBasedUI() : new ConsoleUI();
+	UI INSTANCE = System.console() == null ? new TreeBasedUI() : new ConsoleUI();
 
-	public UsernamePasswordPair promptLogin(String prompt);
+	UsernamePasswordPair promptLogin(String prompt);
 
-	public char[] promptPassword(String prompt);
+	char[] promptPassword(String prompt);
 
-	public ReportView getRoot();
+	ReportView getRoot();
 
 }

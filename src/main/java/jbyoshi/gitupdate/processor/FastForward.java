@@ -27,7 +27,7 @@ import org.eclipse.jgit.revwalk.*;
 
 import jbyoshi.gitupdate.*;
 
-public class FastForward extends BranchProcessor {
+public final class FastForward extends BranchProcessor {
 
 	@Override
 	public void process(Repository repo, Git git, String branch, Ref ref, Report report)
@@ -93,12 +93,6 @@ public class FastForward extends BranchProcessor {
 			}
 		} catch (NoHeadException e) {
 			// Ignore
-		} catch (ConcurrentRefUpdateException e) {
-			System.err.println(e);
-		} catch (CheckoutConflictException e) {
-			System.err.println(e);
-		} catch (WrongRepositoryStateException e) {
-			System.err.println(e);
 		}
 		return false;
 	}
