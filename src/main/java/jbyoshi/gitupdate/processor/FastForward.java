@@ -32,9 +32,14 @@ public final class FastForward extends BranchProcessor {
 	@Override
 	public void process(Repository repo, Git git, String branch, Ref ref, Report report)
 			throws GitAPIException, IOException {
+		String pushDefault = Utils.getPushRemote(repo, branch);
+		if (pushDefault != null) {
+			tryFastForward(repo, ref, repo.getRef(Constants.R_REMOTES + pushDefault + "/" + branch), report);
+		}
 		tryFastForward(repo, ref, repo.getRef(new BranchConfig(repo.getConfig(), branch).getTrackingBranch()), report);
-		// TODO Don't hardcode this
-		tryFastForward(repo, ref, repo.getRef(Constants.R_REMOTES + "upstream/" + branch), report);
+		if (pushDefault == null) {
+			tryFastForward(repo, ref, repo.getRef(Constants.R_REMOTES + "upstream/" + branch), report);
+		}
 	}
 
 	private static boolean tryFastForward(Repository repo, Ref ref, Ref target, Report report)

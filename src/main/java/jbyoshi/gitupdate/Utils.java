@@ -37,4 +37,12 @@ public final class Utils {
 		}
 		return fullBranch;
 	}
+
+	public static String getPushRemote(Repository repo, String branch) throws IOException {
+		String pushDefault = repo.getConfig().getString("branch", branch, "pushremote");
+		if (pushDefault == null) {
+			pushDefault = repo.getConfig().getString("remote", branch, "pushdefault");
+		}
+		return pushDefault;
+	}
 }
