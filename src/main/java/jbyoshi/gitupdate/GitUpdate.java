@@ -30,7 +30,7 @@ import jbyoshi.gitupdate.processor.*;
 public class GitUpdate {
 	private static final Set<File> updated = new HashSet<>();
 	private static final ImmutableList<Processor> processors = ImmutableList.of(new Fetch(), new FastForward(),
-			new Push());
+			new Rebase(), new Push());
 
 	public static void main(String[] args) {
 		Report rootReport = null;
